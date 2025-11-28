@@ -91,7 +91,6 @@
         const Info = ({ className }) => <Icon name="info" className={className} />;
         const Share2 = ({ className }) => <Icon name="share-2" className={className} />;
         const Calendar = ({ className }) => <Icon name="calendar" className={className} />;
-        const Save = ({ className }) => <Icon name="save" className={className} />;
 
         // --- Data ---
         const INITIAL_TEAMS = [
@@ -190,12 +189,27 @@
             }, []);
 
             const [scenarios, setScenarios] = useState(() => {
+                // Try to load saved picks
+                const savedScenarios = localStorage.getItem('chiefs_scenarios');
+                if (savedScenarios) {
+                    try {
+                        return JSON.parse(savedScenarios);
+                    } catch (e) {
+                        console.error("Failed to parse saved picks");
+                    }
+                }
+                // Default if no picks found
                 const initialState = {};
                 Object.values(FULL_SCHEDULE).flat().forEach(game => {
                     initialState[game.id] = game.interest === game.home ? 'home' : 'away';
                 });
                 return initialState;
             });
+
+            // Save picks whenever they change
+            useEffect(() => {
+                localStorage.setItem('chiefs_scenarios', JSON.stringify(scenarios));
+            }, [scenarios]);
 
             const projectedStandings = useMemo(() => {
                 let teams = JSON.parse(JSON.stringify(INITIAL_TEAMS));
@@ -257,41 +271,9 @@
                 }
             };
 
-            const handleDownload = async () => {
-                const htmlContent = "<!DOCTYPE html>" + document.documentElement.outerHTML;
-                const file = new File([htmlContent], "index.html", { type: "text/html" });
-
-                // Try native share first
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            files: [file],
-                            title: 'Chiefs Tracker',
-                            text: 'Save this file.'
-                        });
-                        return; 
-                    } catch (e) {}
-                }
-
-                // Fallback to Clipboard for manual save
-                try {
-                    const url = URL.createObjectURL(file);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'index.html';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    setShareFeedback('Saved as index.html!');
-                } catch (err) {
-                    setShareFeedback('Error saving.');
-                }
-                setTimeout(() => setShareFeedback(''), 3000);
-            };
-
             const handleShare = async () => {
-                const url = window.location.href;
+                // Hardcoded to the user's GitHub URL as requested
+                const url = "https://surbo.github.io/chiefs-tracker/"; 
                 if (navigator.share) {
                     try { await navigator.share({ title: 'Chiefs Playoff Simulator', url: url }); return; } catch (err) {}
                 }
@@ -309,9 +291,7 @@
                                 <h1 className="text-xl font-bold tracking-tight truncate">Playoff Sim</h1>
                             </div>
                             <div className="flex items-center space-x-2">
-                                <button onClick={handleDownload} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors relative touch-manipulation">
-                                    <Save className="w-5 h-5" />
-                                </button>
+                                {/* Save Button Removed per user request */}
                                 <button onClick={handleShare} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors relative touch-manipulation">
                                     <Share2 className="w-5 h-5" />
                                     {shareFeedback && <div className="absolute top-10 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-50">{shareFeedback}</div>}
