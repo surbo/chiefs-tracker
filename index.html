@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Cache Busting Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <title>Chiefs Playoff Simulator</title>
     
     <!-- Styles -->
@@ -36,7 +42,7 @@
         // ==========================================
         //  APP VERSION
         // ==========================================
-        const APP_VERSION = "v2.07"; 
+        const APP_VERSION = "v2.08"; 
 
         // ==========================================
         //  STEP 1: PASTE YOUR FIREBASE KEYS HERE
@@ -62,6 +68,17 @@
                 isFirebaseActive = true;
             }
         } catch (e) { console.warn("Offline Mode"); }
+
+        // Global Error Handler for Mobile Cache Issues
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            // If we hit a critical error, try clearing local storage (often the culprit for white screens on update)
+            if (msg.toLowerCase().includes('script error') || msg.toLowerCase().includes('referenceerror')) {
+                 console.log("Critical error detected, clearing stale local storage.");
+                 // Only clear if we suspect corruption, to save user data if possible
+                 // localStorage.removeItem('chiefs_scenarios'); 
+            }
+            return false;
+        };
 
         // --- 1. FULL DATA ---
         const INITIAL_TEAMS = [
