@@ -42,7 +42,7 @@
         // ==========================================
         //  APP VERSION
         // ==========================================
-        const APP_VERSION = "v2.08"; 
+        const APP_VERSION = "v2.09"; 
 
         // ==========================================
         //  STEP 1: PASTE YOUR FIREBASE KEYS HERE
@@ -74,8 +74,6 @@
             // If we hit a critical error, try clearing local storage (often the culprit for white screens on update)
             if (msg.toLowerCase().includes('script error') || msg.toLowerCase().includes('referenceerror')) {
                  console.log("Critical error detected, clearing stale local storage.");
-                 // Only clear if we suspect corruption, to save user data if possible
-                 // localStorage.removeItem('chiefs_scenarios'); 
             }
             return false;
         };
@@ -170,17 +168,6 @@
             // React renders this empty span, Lucide fills it.
             return <span ref={ref} className="inline-flex items-center justify-center"></span>;
         };
-
-        // Define icons to avoid ReferenceError
-        const Trophy = ({ className }) => <Icon name="trophy" className={className} />;
-        const Share2 = ({ className }) => <Icon name="share-2" className={className} />;
-        const CheckCircle2 = ({ className }) => <Icon name="check-circle-2" className={className} />;
-        const XCircle = ({ className }) => <Icon name="x-circle" className={className} />;
-        const Activity = ({ className }) => <Icon name="activity" className={className} />;
-        const ChevronLeft = ({ className }) => <Icon name="chevron-left" className={className} />;
-        const ChevronRight = ({ className }) => <Icon name="chevron-right" className={className} />;
-        const Info = ({ className }) => <Icon name="info" className={className} />;
-        const Calendar = ({ className }) => <Icon name="calendar" className={className} />;
 
         function App() {
             const [pulse, setPulse] = useState({ yes: 1240, no: 650, voted: false });
@@ -429,7 +416,7 @@
                             <div className="flex items-center space-x-2">
                                 {/* Save Button Removed per user request */}
                                 <button onClick={handleShare} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors relative touch-manipulation">
-                                    <Share2 className="w-5 h-5" />
+                                    <Icon name="share-2" className="w-5 h-5" />
                                     {shareFeedback && <div className="absolute top-10 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-50">{shareFeedback}</div>}
                                 </button>
                             </div>
@@ -448,7 +435,7 @@
                                     <span className="text-xl font-bold text-gray-400 mb-2">seed</span>
                                 </div>
                                 <div className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold shadow-sm ${inPlayoffs ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                    {inPlayoffs ? <CheckCircle2 className="w-4 h-4 mr-2"/> : <XCircle className="w-4 h-4 mr-2"/>}
+                                    {inPlayoffs ? <Icon name="check-circle-2" className="w-4 h-4 mr-2" /> : <Icon name="x-circle" className="w-4 h-4 mr-2" />}
                                     {inPlayoffs ? 'PLAYOFF BOUND' : 'ELIMINATED'}
                                 </div>
                                 <div className="mt-6 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
@@ -472,14 +459,14 @@
 
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center justify-between select-none">
                             <button onClick={() => setActiveWeek(w => Math.max(13, w-1))} disabled={activeWeek === 13} className="arrow-btn p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30 disabled:bg-gray-100 disabled:text-gray-400 shadow-sm border border-red-100">
-                                <ChevronLeft className="w-6 h-6" />
+                                <Icon name="chevron-left" className="w-6 h-6" />
                             </button>
                             <div className="text-center">
                                 <span className="text-xs text-gray-400 font-bold block uppercase tracking-wide">SCHEDULE</span>
                                 <span className="font-bold text-xl">Week {activeWeek}</span>
                             </div>
                             <button onClick={() => setActiveWeek(w => Math.min(18, w+1))} disabled={activeWeek === 18} className="arrow-btn p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30 disabled:bg-gray-100 disabled:text-gray-400 shadow-sm border border-red-100">
-                                <ChevronRight className="w-6 h-6" />
+                                <Icon name="chevron-right" className="w-6 h-6" />
                             </button>
                         </div>
 
@@ -509,7 +496,7 @@
                                             </button>
                                         </div>
                                         <div className="flex items-start space-x-2 bg-blue-50 p-2 rounded text-blue-800">
-                                            <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                            <Icon name="info" className="w-4 h-4 mt-0.5 flex-shrink-0" />
                                             <div className="text-xs leading-relaxed">
                                                 <span className="font-bold">Root for {game.interest}: </span>{game.reason}
                                             </div>
@@ -521,7 +508,7 @@
 
                         <div>
                             <h2 className="text-lg font-bold mb-3 flex items-center text-gray-800">
-                                <Activity className="w-5 h-5 mr-2 text-red-600"/> Live AFC Standings*
+                                <Icon name="activity" className="w-5 h-5 mr-2 text-red-600" /> Live AFC Standings*
                             </h2>
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                                 <table className="w-full text-sm">
@@ -572,7 +559,7 @@
                                         {localMode && <span className="text-[10px] bg-gray-700 px-1.5 rounded text-gray-300 flex items-center">Offline Mode</span>}
                                     </div>
                                 </div>
-                                <Calendar className="text-gray-600 w-8 h-8" />
+                                <Icon name="calendar" className="text-gray-600 w-8 h-8" />
                             </div>
                             <div className="flex space-x-3 mb-4">
                                 <button onClick={() => handleVote('yes')} disabled={pulse.voted} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-transform active:scale-95 border border-white/10 touch-manipulation flex justify-center items-center ${pulse.voted ? 'bg-green-600/20 text-white/50' : 'bg-green-600 hover:bg-green-500'}`}>
