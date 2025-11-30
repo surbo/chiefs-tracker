@@ -60,20 +60,20 @@
             }
         } catch (e) { console.warn("Offline Mode"); }
 
-        // --- 1. DATA ---
+        // --- 1. DATA WITH DIVISIONS ---
         const INITIAL_TEAMS = [
-            { id: 'ne', name: 'Patriots', wins: 10, losses: 2, conf: 'AFC', logo: '🦁' },
-            { id: 'den', name: 'Broncos', wins: 9, losses: 2, conf: 'AFC', logo: '🐴' },
-            { id: 'jax', name: 'Jaguars', wins: 8, losses: 4, conf: 'AFC', logo: '🐆' }, 
-            { id: 'ind', name: 'Colts', wins: 8, losses: 4, conf: 'AFC', logo: '🐎' },   
-            { id: 'hou', name: 'Texans', wins: 7, losses: 5, conf: 'AFC', logo: '🐮' },  
-            { id: 'lac', name: 'Chargers', wins: 7, losses: 4, conf: 'AFC', logo: '⚡' }, 
-            { id: 'buf', name: 'Bills', wins: 7, losses: 4, conf: 'AFC', logo: '🦬' },   
-            { id: 'pit', name: 'Steelers', wins: 6, losses: 5, conf: 'AFC', logo: '🔨' }, 
-            { id: 'bal', name: 'Ravens', wins: 6, losses: 6, conf: 'AFC', logo: '🐦' },  
-            { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, conf: 'AFC', logo: '🏹' },   
-            { id: 'mia', name: 'Dolphins', wins: 4, losses: 7, conf: 'AFC', logo: '🐬' },
-            { id: 'cin', name: 'Bengals', wins: 4, losses: 8, conf: 'AFC', logo: '🐯' },
+            { id: 'ne', name: 'Patriots', wins: 10, losses: 2, conf: 'AFC', division: 'East', logo: '🦁' },
+            { id: 'den', name: 'Broncos', wins: 9, losses: 2, conf: 'AFC', division: 'West', logo: '🐴' },
+            { id: 'jax', name: 'Jaguars', wins: 8, losses: 4, conf: 'AFC', division: 'South', logo: '🐆' }, 
+            { id: 'ind', name: 'Colts', wins: 8, losses: 4, conf: 'AFC', division: 'South', logo: '🐎' },   
+            { id: 'hou', name: 'Texans', wins: 7, losses: 5, conf: 'AFC', division: 'South', logo: '🐮' },  
+            { id: 'lac', name: 'Chargers', wins: 7, losses: 4, conf: 'AFC', division: 'West', logo: '⚡' }, 
+            { id: 'buf', name: 'Bills', wins: 7, losses: 4, conf: 'AFC', division: 'East', logo: '🦬' },   
+            { id: 'pit', name: 'Steelers', wins: 6, losses: 5, conf: 'AFC', division: 'North', logo: '🔨' }, 
+            { id: 'bal', name: 'Ravens', wins: 6, losses: 6, conf: 'AFC', division: 'North', logo: '🐦' },  
+            { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, conf: 'AFC', division: 'West', logo: '🏹' },   
+            { id: 'mia', name: 'Dolphins', wins: 4, losses: 7, conf: 'AFC', division: 'East', logo: '🐬' },
+            { id: 'cin', name: 'Bengals', wins: 4, losses: 8, conf: 'AFC', division: 'North', logo: '🐯' },
         ];
 
         // --- 2. SCHEDULE ---
@@ -82,10 +82,8 @@
                 { id: 'w13_kc_dal', home: 'Cowboys', away: 'Chiefs', interest: 'Chiefs', status: 'final', winner: 'home', score: '31-28' },
                 { id: 'w13_hou_ind', home: 'Colts', away: 'Texans', interest: 'Colts', status: 'final', winner: 'away', score: '16-20' },
                 { id: 'w13_jax_ten', home: 'Titans', away: 'Jaguars', interest: 'Titans', status: 'final', winner: 'away', score: '3-25' },
-                // LIVE GAMES BELOW (For Demo)
                 { id: 'w13_pit_buf', home: 'Steelers', away: 'Bills', interest: 'Bills', status: 'live', score: '10-7', reason: 'Knocks Steelers down to 6-6' },
                 { id: 'w13_lac_lv', home: 'Chargers', away: 'Raiders', interest: 'Raiders', status: 'live', score: '0-0', reason: 'Chargers hold tiebreaker over KC' },
-                // Scheduled
                 { id: 'w13_den_was', home: 'Commanders', away: 'Broncos', interest: 'Commanders', status: 'scheduled', reason: 'Catching the division leader' }
             ],
             14: [
@@ -139,33 +137,23 @@
 
             // --- Init ---
             useEffect(() => {
-                // Initialize Scenarios: Merge Saved Picks with Real Final Results
                 setScenarios(prev => {
-                    // 1. Check local storage for saved user picks
                     let saved = {};
                     try {
                         const fromStorage = localStorage.getItem('chiefs_scenarios');
                         if (fromStorage) saved = JSON.parse(fromStorage);
                     } catch(e) {}
-
                     const combined = { ...saved };
-
-                    // 2. Loop through schedule to ensure validity
                     Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                        // If game is FINAL in real life, force that result (overwriting any user pick)
                         if (game.status === 'final') {
                             combined[game.id] = game.winner; 
-                        } 
-                        // If not final and user hasn't picked yet, set default
-                        else if (!combined[game.id]) {
+                        } else if (!combined[game.id]) {
                             combined[game.id] = game.interest === game.home ? 'home' : 'away';
                         }
                     });
-                    
                     return combined;
                 });
 
-                // Pulse Logic
                 let unsubscribeSnapshot = () => {};
                 if (isFirebaseActive) {
                     auth.onAuthStateChanged(user => {
@@ -189,17 +177,17 @@
                 return () => unsubscribeSnapshot();
             }, []);
 
-            // Save picks whenever they change
             useEffect(() => {
-                // Only save if we have scenarios loaded
                 if (Object.keys(scenarios).length > 0) {
                     localStorage.setItem('chiefs_scenarios', JSON.stringify(scenarios));
                 }
             }, [scenarios]);
 
-            // --- Calc ---
+            // --- Calc: DIVISION AWARE ---
             const projectedStandings = useMemo(() => {
                 let currentTeams = JSON.parse(JSON.stringify(teams));
+                
+                // 1. Calculate Records
                 Object.values(FULL_SCHEDULE).flat().forEach(game => {
                     if (game.status === 'final') return;
                     if (!scenarios[game.id]) return;
@@ -207,19 +195,46 @@
                     const homeTeam = currentTeams.find(t => t.name.includes(game.home) || game.home.includes(t.name));
                     const awayTeam = currentTeams.find(t => t.name.includes(game.away) || game.away.includes(t.name));
                     
-                    // Logic fix: Update teams independently so missing opponents don't block updates
                     if (homeTeam) {
-                        if (winnerSide === 'home') homeTeam.wins++;
-                        else homeTeam.losses++;
+                        if (winnerSide === 'home') homeTeam.wins++; else homeTeam.losses++;
                     }
                     if (awayTeam) {
-                        if (winnerSide === 'away') awayTeam.wins++;
-                        else awayTeam.losses++;
+                        if (winnerSide === 'away') awayTeam.wins++; else awayTeam.losses++;
                     }
                 });
-                return currentTeams.filter(t => t.conf === 'AFC').sort((a, b) => {
+
+                // 2. Identify Division Winners
+                const divisions = { 'East': [], 'West': [], 'North': [], 'South': [] };
+                currentTeams.forEach(t => { if(divisions[t.division]) divisions[t.division].push(t); });
+
+                let winners = [];
+                let wildcards = [];
+
+                Object.values(divisions).forEach(divTeams => {
+                    // Sort by wins to find division leader
+                    divTeams.sort((a, b) => {
+                        const wa = a.wins/(a.wins+a.losses||1), wb = b.wins/(b.wins+b.losses||1);
+                        if(Math.abs(wa-wb)>0.001) return wb-wa;
+                        return 0; // Simple tie break for now
+                    });
+                    if (divTeams.length > 0) {
+                        winners.push(divTeams[0]);
+                        for(let i=1; i<divTeams.length; i++) wildcards.push(divTeams[i]);
+                    }
+                });
+
+                // 3. Sort Groups
+                // Sort Winners (Seeds 1-4)
+                winners.sort((a, b) => {
+                    const wa = a.wins/(a.wins+a.losses||1), wb = b.wins/(b.wins+b.losses||1);
+                    return wb - wa;
+                });
+
+                // Sort Wildcards (Seeds 5+) with KC Tiebreakers
+                wildcards.sort((a, b) => {
                     const wa = a.wins/(a.wins+a.losses||1), wb = b.wins/(b.wins+b.losses||1);
                     if(Math.abs(wa-wb)>0.001) return wb-wa;
+                    
                     const k=['Bills','Chargers','Jaguars'];
                     if(a.name==='Chiefs'&&k.includes(b.name)) return 1;
                     if(b.name==='Chiefs'&&k.includes(a.name)) return -1;
@@ -227,6 +242,8 @@
                     if(b.name==='Chiefs'&&a.name==='Texans') return -1;
                     return b.wins-a.wins;
                 });
+
+                return [...winners, ...wildcards];
             }, [scenarios, teams]);
 
             const chiefsRank = projectedStandings.findIndex(t => t.name === 'Chiefs') + 1;
@@ -358,7 +375,7 @@
                                             const isChiefs = team.name === 'Chiefs';
                                             return (
                                                 <React.Fragment key={team.id}>
-                                                    <tr className={`${isChiefs ? 'bg-red-50' : 'bg-white'} ${rank <= 7 ? 'text-gray-900' : 'text-gray-400'}`}>
+                                                    <tr className={`${isChiefs ? 'bg-red-50' : 'bg-white'} ${rank <= 7 ? 'text-gray-900' : 'text-gray-400'} ${rank === 4 ? 'border-b-4 border-gray-200' : ''}`}>
                                                         <td className="px-4 py-3 font-bold text-gray-500">{rank}</td>
                                                         <td className="px-4 py-3 flex items-center font-medium"><span className="mr-2 text-xl">{team.logo}</span><div className="flex flex-col"><span className={isChiefs ? 'text-red-700 font-bold text-base' : ''}>{team.name}</span>{isChiefs && rank > 7 && <span className="text-[10px] text-red-500 font-bold uppercase">In the Hunt</span>}</div></td>
                                                         <td className="px-4 py-3 text-right tabular-nums font-bold">{team.wins}-{team.losses}</td>
