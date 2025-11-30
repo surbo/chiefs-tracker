@@ -171,9 +171,15 @@
                     const winnerSide = scenarios[game.id];
                     const homeTeam = currentTeams.find(t => t.name.includes(game.home) || game.home.includes(t.name));
                     const awayTeam = currentTeams.find(t => t.name.includes(game.away) || game.away.includes(t.name));
-                    if (homeTeam && awayTeam) {
-                        if (winnerSide === 'home') { homeTeam.wins++; awayTeam.losses++; }
-                        else { awayTeam.wins++; homeTeam.losses++; }
+                    
+                    // Logic fix: Update teams independently so missing opponents don't block updates
+                    if (homeTeam) {
+                        if (winnerSide === 'home') homeTeam.wins++;
+                        else homeTeam.losses++;
+                    }
+                    if (awayTeam) {
+                        if (winnerSide === 'away') awayTeam.wins++;
+                        else awayTeam.losses++;
                     }
                 });
                 return currentTeams.filter(t => t.conf === 'AFC').sort((a, b) => {
