@@ -5,65 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chiefs Playoff Simulator</title>
     
-    <!-- 1. Load Styles -->
+    <!-- Styles -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { -webkit-tap-highlight-color: transparent; background-color: #f9fafb; font-family: sans-serif; }
+        body { -webkit-tap-highlight-color: transparent; background-color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         .touch-manipulation { touch-action: manipulation; }
-        /* Loading Spinner */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #b91c1c; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #error-log { display: none; color: red; padding: 20px; text-align: center; }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     </style>
 
-    <!-- 2. Load Core Libraries (React & Babel) -->
+    <!-- Core Libraries -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- 3. Load Firebase (Compat Version - More Stable for Mobile HTML) -->
+    <!-- Firebase (Compat Mode for Stability) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 </head>
 <body>
-    
-    <!-- Fallback UI (Visible until React loads) -->
-    <div id="root">
-        <div style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <div class="loader"></div>
-            <p class="text-gray-500 font-bold mt-4">Loading Simulator...</p>
-        </div>
-    </div>
-
-    <!-- Error Display -->
-    <div id="error-log"></div>
+    <div id="root"></div>
 
     <script type="text/babel">
-        // Global Error Handler
-        window.onerror = function(message, source, lineno, colno, error) {
-            document.getElementById('root').style.display = 'none';
-            const log = document.getElementById('error-log');
-            log.style.display = 'block';
-            log.innerHTML = `<strong>Crash Detected:</strong><br>${message}`;
-        };
-
         // ==========================================
-        //  FIREBASE CONFIG (Optional)
+        //  STEP 1: PASTE YOUR FIREBASE KEYS HERE
+        //  (This restores the Kingdom Pulse Voting)
         // ==========================================
         const firebaseConfig = {
-         apiKey: "AIzaSyC1X5ojFe20AaRC1OMVpDoXbqtzi5j0s4Y",
-  authDomain: "chiefs-tracker.firebaseapp.com",
-  projectId: "chiefs-tracker",
-  storageBucket: "chiefs-tracker.firebasestorage.app",
-  messagingSenderId: "484287750268",
-  appId: "1:484287750268:web:e3f84f1dbd0d371df929f9"
+            apiKey: "AIzaSyC1X5ojFe20AaRC1OMVpDoXbqtzi5j0s4Y",
+            authDomain: "chiefs-tracker.firebaseapp.com",
+            projectId: "chiefs-tracker",
+            storageBucket: "chiefs-tracker.firebasestorage.app",
+            messagingSenderId: "484287750268",
+            appId: "1:484287750268:web:e3f84f1dbd0d371df929f9"
         };
 
         const { useState, useEffect, useMemo } = React;
 
-        // Initialize Firebase safely
+        // --- Firebase Initialization ---
         let db, auth;
         let isFirebaseActive = false;
 
@@ -73,187 +54,185 @@
                 db = firebase.firestore(app);
                 auth = firebase.auth(app);
                 isFirebaseActive = true;
+            } else {
+                console.log("No API keys found. Running in Offline Mode.");
             }
         } catch (e) {
-            console.warn("Running in Offline Mode:", e);
+            console.warn("Firebase Init Error (Offline Mode):", e);
         }
 
-        // --- Icons ---
-        const Icon = ({ name, className }) => {
-            useEffect(() => {
-                if (window.lucide) window.lucide.createIcons();
-            }, [name]);
-            return <i data-lucide={name} className={className}></i>;
-        };
-
-        // Icons map
-        const Trophy = ({ className }) => <Icon name="trophy" className={className} />;
-        const CheckCircle2 = ({ className }) => <Icon name="check-circle-2" className={className} />;
-        const XCircle = ({ className }) => <Icon name="x-circle" className={className} />;
-        const Activity = ({ className }) => <Icon name="activity" className={className} />;
-        const ChevronLeft = ({ className }) => <Icon name="chevron-left" className={className} />;
-        const ChevronRight = ({ className }) => <Icon name="chevron-right" className={className} />;
-        const Info = ({ className }) => <Icon name="info" className={className} />;
-        const Share2 = ({ className }) => <Icon name="share-2" className={className} />;
-        const Calendar = ({ className }) => <Icon name="calendar" className={className} />;
-
-        // --- Data ---
+        // --- 1. LATEST WEEK 13 DATA (Hardcoded) ---
+        // Updated: Sunday, Nov 30, 2025
         const INITIAL_TEAMS = [
-            { id: 'ne', name: 'Patriots', wins: 10, losses: 2, division: 'East', conf: 'AFC', logo: '🦁' },
-            { id: 'den', name: 'Broncos', wins: 9, losses: 2, division: 'West', conf: 'AFC', logo: '🐴' },
-            { id: 'ind', name: 'Colts', wins: 8, losses: 3, division: 'South', conf: 'AFC', logo: '🐎' },
-            { id: 'pit', name: 'Steelers', wins: 6, losses: 5, division: 'North', conf: 'AFC', logo: '🔨' },
-            { id: 'lac', name: 'Chargers', wins: 7, losses: 4, division: 'West', conf: 'AFC', logo: '⚡' },
-            { id: 'jax', name: 'Jaguars', wins: 7, losses: 4, division: 'South', conf: 'AFC', logo: '🐆' },
-            { id: 'buf', name: 'Bills', wins: 7, losses: 4, division: 'East', conf: 'AFC', logo: '🦬' },
-            { id: 'hou', name: 'Texans', wins: 6, losses: 5, division: 'South', conf: 'AFC', logo: '🐮' },
-            { id: 'bal', name: 'Ravens', wins: 6, losses: 6, division: 'North', conf: 'AFC', logo: '🐦' },
-            { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, division: 'West', conf: 'AFC', logo: '🏹' },
-            { id: 'mia', name: 'Dolphins', wins: 4, losses: 7, division: 'East', conf: 'AFC', logo: '🐬' },
-            { id: 'cin', name: 'Bengals', wins: 4, losses: 8, division: 'North', conf: 'AFC', logo: '🐯' },
+            { id: 'ne', name: 'Patriots', wins: 10, losses: 2, conf: 'AFC', logo: '🦁' },
+            { id: 'den', name: 'Broncos', wins: 9, losses: 2, conf: 'AFC', logo: '🐴' },
+            { id: 'jax', name: 'Jaguars', wins: 8, losses: 4, conf: 'AFC', logo: '🐆' }, 
+            { id: 'ind', name: 'Colts', wins: 8, losses: 4, conf: 'AFC', logo: '🐎' },   
+            { id: 'hou', name: 'Texans', wins: 7, losses: 5, conf: 'AFC', logo: '🐮' },  
+            { id: 'lac', name: 'Chargers', wins: 7, losses: 4, conf: 'AFC', logo: '⚡' }, 
+            { id: 'buf', name: 'Bills', wins: 7, losses: 4, conf: 'AFC', logo: '🦬' },   
+            { id: 'pit', name: 'Steelers', wins: 6, losses: 5, conf: 'AFC', logo: '🔨' }, 
+            { id: 'bal', name: 'Ravens', wins: 6, losses: 6, conf: 'AFC', logo: '🐦' },  
+            { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, conf: 'AFC', logo: '🏹' },   
+            { id: 'mia', name: 'Dolphins', wins: 4, losses: 7, conf: 'AFC', logo: '🐬' },
+            { id: 'cin', name: 'Bengals', wins: 4, losses: 8, conf: 'AFC', logo: '🐯' },
         ];
 
+        // --- 2. SCHEDULE & LOCKS ---
         const FULL_SCHEDULE = {
             13: [
-                { id: 'w13_pit_buf', home: 'Steelers', away: 'Bills', interest: 'Bills', reason: 'Knocks Steelers to 6-6 (Tied with KC)' },
-                { id: 'w13_hou_ind', home: 'Colts', away: 'Texans', interest: 'Colts', reason: 'Knocks Texans to 6-6 (Tied with KC)' },
-                { id: 'w13_lac_lv', home: 'Chargers', away: 'Raiders', interest: 'Raiders', reason: 'Chargers hold tiebreaker over KC' },
-                { id: 'w13_jax_ten', home: 'Titans', away: 'Jaguars', interest: 'Titans', reason: 'Jags hold tiebreaker over KC' },
-                { id: 'w13_den_was', home: 'Commanders', away: 'Broncos', interest: 'Commanders', reason: 'Catching the division leader' }
+                { id: 'w13_kc_dal', home: 'Cowboys', away: 'Chiefs', interest: 'Chiefs', status: 'final', winner: 'home', score: '31-28' },
+                { id: 'w13_hou_ind', home: 'Colts', away: 'Texans', interest: 'Colts', status: 'final', winner: 'away', score: '16-20' },
+                { id: 'w13_jax_ten', home: 'Titans', away: 'Jaguars', interest: 'Titans', status: 'final', winner: 'away', score: '3-25' },
+                { id: 'w13_pit_buf', home: 'Steelers', away: 'Bills', interest: 'Bills', status: 'scheduled', reason: 'Knocks Steelers down to 6-6' },
+                { id: 'w13_lac_lv', home: 'Chargers', away: 'Raiders', interest: 'Raiders', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC' },
+                { id: 'w13_den_was', home: 'Commanders', away: 'Broncos', interest: 'Commanders', status: 'scheduled', reason: 'Catching the division leader' }
             ],
             14: [
-                { id: 'w14_kc_hou', home: 'Chiefs', away: 'Texans', interest: 'Chiefs', reason: 'MUST WIN' },
-                { id: 'w14_buf_cin', home: 'Bills', away: 'Bengals', interest: 'Bengals', reason: 'Bills are ahead of KC' },
-                { id: 'w14_lac_phi', home: 'Chargers', away: 'Eagles', interest: 'Eagles', reason: 'Chargers are ahead of KC' },
-                { id: 'w14_jax_ind', home: 'Jaguars', away: 'Colts', interest: 'Colts', reason: 'Jags are ahead of KC' },
-                { id: 'w14_pit_bal', home: 'Ravens', away: 'Steelers', interest: 'Ravens', reason: 'Drag Steelers down to pack' },
-                { id: 'w14_den_lv', home: 'Raiders', away: 'Broncos', interest: 'Raiders', reason: 'Division Hope' }
+                { id: 'w14_kc_hou', home: 'Chiefs', away: 'Texans', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN GAME' },
+                { id: 'w14_buf_cin', home: 'Bills', away: 'Bengals', interest: 'Bengals', status: 'scheduled', reason: 'Bills are ahead of KC' },
+                { id: 'w14_lac_phi', home: 'Chargers', away: 'Eagles', interest: 'Eagles', status: 'scheduled', reason: 'Chargers are ahead of KC' },
+                { id: 'w14_jax_ind', home: 'Jaguars', away: 'Colts', interest: 'Colts', status: 'scheduled', reason: 'Jags are ahead of KC' }
             ],
             15: [
-                { id: 'w15_kc_lac', home: 'Chiefs', away: 'Chargers', interest: 'Chiefs', reason: 'MUST WIN (Division & WC)' },
-                { id: 'w15_buf_ne', home: 'Patriots', away: 'Bills', interest: 'Patriots', reason: 'Bills are ahead of KC' },
-                { id: 'w15_jax_nyj', home: 'Jaguars', away: 'Jets', interest: 'Jets', reason: 'Jags are ahead of KC' },
-                { id: 'w15_pit_mia', home: 'Steelers', away: 'Dolphins', interest: 'Dolphins', reason: 'Steelers are threat' },
-                { id: 'w15_hou_ari', home: 'Texans', away: 'Cardinals', interest: 'Cardinals', reason: 'Texans are threat' },
-                { id: 'w15_ind_sea', home: 'Seahawks', away: 'Colts', interest: 'Seahawks', reason: 'Chase the Colts' }
+                { id: 'w15_kc_lac', home: 'Chiefs', away: 'Chargers', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN (Division & WC)' },
+                { id: 'w15_buf_ne', home: 'Patriots', away: 'Bills', interest: 'Patriots', status: 'scheduled', reason: 'Bills are ahead of KC' },
+                { id: 'w15_jax_nyj', home: 'Jaguars', away: 'Jets', interest: 'Jets', status: 'scheduled', reason: 'Jags are ahead of KC' }
             ],
             16: [
-                { id: 'w16_kc_ten', home: 'Titans', away: 'Chiefs', interest: 'Chiefs', reason: 'MUST WIN' },
-                { id: 'w16_jax_den', home: 'Broncos', away: 'Jaguars', interest: 'Broncos', reason: 'Jags are bigger threat to WC' },
-                { id: 'w16_lac_dal', home: 'Cowboys', away: 'Chargers', interest: 'Cowboys', reason: 'Chargers are threat' },
-                { id: 'w16_pit_det', home: 'Lions', away: 'Steelers', interest: 'Lions', reason: 'Steelers are threat' },
-                { id: 'w16_buf_cle', home: 'Browns', away: 'Bills', interest: 'Browns', reason: 'Bills are threat' },
-                { id: 'w16_hou_lv', home: 'Texans', away: 'Raiders', interest: 'Raiders', reason: 'Texans are threat' }
+                { id: 'w16_kc_ten', home: 'Titans', away: 'Chiefs', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN' },
+                { id: 'w16_jax_den', home: 'Broncos', away: 'Jaguars', interest: 'Broncos', status: 'scheduled', reason: 'Jags are bigger threat to WC' }
             ],
             17: [
-                { id: 'w17_kc_den', home: 'Chiefs', away: 'Broncos', interest: 'Chiefs', reason: 'MUST WIN (Xmas Day)' },
-                { id: 'w17_lac_hou', home: 'Chargers', away: 'Texans', interest: 'Texans', reason: 'Chargers hold tiebreaker over KC' },
-                { id: 'w17_buf_phi', home: 'Bills', away: 'Eagles', interest: 'Eagles', reason: 'Bills are threat' },
-                { id: 'w17_jax_ind', home: 'Colts', away: 'Jaguars', interest: 'Colts', reason: 'Jags are threat' },
-                { id: 'w17_pit_cle', home: 'Browns', away: 'Steelers', interest: 'Browns', reason: 'Steelers are threat' }
+                { id: 'w17_kc_den', home: 'Chiefs', away: 'Broncos', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN (Xmas Day)' },
+                { id: 'w17_lac_hou', home: 'Chargers', away: 'Texans', interest: 'Texans', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC' }
             ],
             18: [
-                { id: 'w18_kc_lv', home: 'Raiders', away: 'Chiefs', interest: 'Chiefs', reason: 'MUST WIN' },
-                { id: 'w18_den_lac', home: 'Broncos', away: 'Chargers', interest: 'Broncos', reason: 'Chargers hold tiebreaker over KC' },
-                { id: 'w18_hou_ind', home: 'Texans', away: 'Colts', interest: 'Colts', reason: 'Texans are threat' },
-                { id: 'w18_jax_ten', home: 'Jaguars', away: 'Titans', interest: 'Titans', reason: 'Jags are threat' },
-                { id: 'w18_pit_bal', home: 'Steelers', away: 'Ravens', interest: 'Ravens', reason: 'Steelers are threat' },
-                { id: 'w18_buf_nyj', home: 'Bills', away: 'Jets', interest: 'Jets', reason: 'Bills are threat' }
+                { id: 'w18_kc_lv', home: 'Raiders', away: 'Chiefs', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN' },
+                { id: 'w18_den_lac', home: 'Broncos', away: 'Chargers', interest: 'Broncos', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC' }
             ]
         };
 
-        function App() {
-            const [pulse, setPulse] = useState({ yes: 1240, no: 650, voted: false });
-            const [activeWeek, setActiveWeek] = useState(13);
-            const [shareFeedback, setShareFeedback] = useState('');
-            const [localMode, setLocalMode] = useState(!isFirebaseActive);
+        // --- 3. ICON COMPONENT (Safe Fallback) ---
+        const Icon = ({ name, className }) => {
+            useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
+            return <i data-lucide={name} className={className}></i>;
+        };
 
+        function App() {
+            // Pulse State
+            const [pulse, setPulse] = useState({ yes: 1240, no: 650, voted: false });
+            const [localMode, setLocalMode] = useState(!isFirebaseActive);
+            
+            // App State
+            const [teams, setTeams] = useState(INITIAL_TEAMS);
+            const [scenarios, setScenarios] = useState({});
+            const [activeWeek, setActiveWeek] = useState(13);
+            const [copied, setCopied] = useState(false);
+
+            // --- 4. INIT LOGIC ---
             useEffect(() => {
+                // Initialize Scenarios (Lock finals)
+                const initialScenarios = {};
+                Object.values(FULL_SCHEDULE).flat().forEach(game => {
+                    if (game.status === 'final') {
+                        initialScenarios[game.id] = game.winner; 
+                    } else {
+                        initialScenarios[game.id] = game.interest === game.home ? 'home' : 'away';
+                    }
+                });
+                setScenarios(initialScenarios);
+
+                // Initialize Pulse (Firebase with Race Condition Fix)
+                let unsubscribeSnapshot = () => {};
+
                 if (isFirebaseActive) {
-                    auth.signInAnonymously().catch(e => {
-                        console.error("Auth failed, using local", e);
-                        setLocalMode(true);
+                    const unsubscribeAuth = auth.onAuthStateChanged(user => {
+                        if (user) {
+                            // Only attach listener once we have a confirmed user
+                            unsubscribeSnapshot(); // Clean up previous if any
+                            unsubscribeSnapshot = db.collection('stats').doc('chiefs_pulse')
+                                .onSnapshot((doc) => {
+                                    if (doc.exists) {
+                                        const d = doc.data();
+                                        setPulse(prev => ({ ...prev, yes: d.yes || 0, no: d.no || 0 }));
+                                    }
+                                }, (error) => {
+                                    console.warn("Snapshot failed (permissions/network), using local mode.", error);
+                                    setLocalMode(true);
+                                });
+                        } else {
+                            // Sign in if not signed in
+                            auth.signInAnonymously().catch(e => {
+                                console.error("Auth failed, using local", e);
+                                setLocalMode(true);
+                            });
+                        }
                     });
                     
-                    const unsubscribe = db.collection('stats').doc('chiefs_pulse')
-                        .onSnapshot((doc) => {
-                            if (doc.exists) {
-                                const d = doc.data();
-                                setPulse(prev => ({ ...prev, yes: d.yes || 0, no: d.no || 0 }));
-                            }
-                        }, (error) => {
-                            console.log("Snapshot failed, using local", error);
-                            setLocalMode(true);
-                        });
-                        
-                    return () => unsubscribe();
+                    return () => {
+                        unsubscribeAuth();
+                        unsubscribeSnapshot();
+                    };
                 } else {
                     const saved = localStorage.getItem('chiefs_pulse_local');
                     if(saved) setPulse(JSON.parse(saved));
                 }
             }, []);
 
-            const [scenarios, setScenarios] = useState(() => {
-                // Try to load saved picks
-                const savedScenarios = localStorage.getItem('chiefs_scenarios');
-                if (savedScenarios) {
-                    try {
-                        return JSON.parse(savedScenarios);
-                    } catch (e) {
-                        console.error("Failed to parse saved picks");
-                    }
-                }
-                // Default if no picks found
-                const initialState = {};
-                Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                    initialState[game.id] = game.interest === game.home ? 'home' : 'away';
-                });
-                return initialState;
-            });
-
-            // Save picks whenever they change
-            useEffect(() => {
-                localStorage.setItem('chiefs_scenarios', JSON.stringify(scenarios));
-            }, [scenarios]);
-
+            // --- 5. CALCULATION ENGINE ---
             const projectedStandings = useMemo(() => {
-                let teams = JSON.parse(JSON.stringify(INITIAL_TEAMS));
+                let currentTeams = JSON.parse(JSON.stringify(teams));
 
                 Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                    if (!scenarios[game.id]) return;
-                    const winnerSide = scenarios[game.id];
-                    const homeTeam = teams.find(t => t.name === game.home);
-                    const awayTeam = teams.find(t => t.name === game.away);
+                    // Skip Final games (already in Initial Teams record)
+                    if (game.status === 'final') return;
 
-                    if (winnerSide === 'home') {
-                        if (homeTeam) homeTeam.wins += 1;
-                        if (awayTeam) awayTeam.losses += 1;
-                    } else {
-                        if (awayTeam) awayTeam.wins += 1;
-                        if (homeTeam) homeTeam.losses += 1;
+                    // Skip undefined scenarios
+                    if (!scenarios[game.id]) return;
+                    
+                    const winnerSide = scenarios[game.id];
+                    const homeTeam = currentTeams.find(t => t.name.includes(game.home) || game.home.includes(t.name));
+                    const awayTeam = currentTeams.find(t => t.name.includes(game.away) || game.away.includes(t.name));
+
+                    if (homeTeam && awayTeam) {
+                        if (winnerSide === 'home') {
+                            homeTeam.wins += 1;
+                            awayTeam.losses += 1;
+                        } else {
+                            awayTeam.wins += 1;
+                            homeTeam.losses += 1;
+                        }
                     }
                 });
 
-                return teams
+                // Sort
+                return currentTeams
                     .filter(t => t.conf === 'AFC')
                     .sort((a, b) => {
                         const winPctA = a.wins / (a.wins + a.losses || 1);
                         const winPctB = b.wins / (b.wins + b.losses || 1);
                         if (Math.abs(winPctA - winPctB) > 0.001) return winPctB - winPctA;
-                        const toughMatchups = ['Bills', 'Chargers', 'Jaguars'];
-                        if (a.name === 'Chiefs' && toughMatchups.includes(b.name)) return 1; 
-                        if (b.name === 'Chiefs' && toughMatchups.includes(a.name)) return -1;
+                        
+                        const killers = ['Bills', 'Chargers', 'Jaguars'];
+                        if (a.name === 'Chiefs' && killers.includes(b.name)) return 1; 
+                        if (b.name === 'Chiefs' && killers.includes(a.name)) return -1;
                         if (a.name === 'Chiefs' && b.name === 'Texans') return 1;
                         if (b.name === 'Chiefs' && a.name === 'Texans') return -1;
                         return b.wins - a.wins; 
                     });
-            }, [scenarios]);
+            }, [scenarios, teams]);
 
-            const chiefsStats = projectedStandings.find(t => t.name === 'Chiefs');
             const chiefsRank = projectedStandings.findIndex(t => t.name === 'Chiefs') + 1;
             const inPlayoffs = chiefsRank <= 7 && chiefsRank > 0;
+            const chiefsStats = projectedStandings.find(t => t.name === 'Chiefs');
 
+            // --- HANDLERS ---
             const handleToggle = (gameId) => {
+                // Prevent toggling locked games
+                const game = Object.values(FULL_SCHEDULE).flat().find(g => g.id === gameId);
+                if (game && game.status === 'final') return;
+
                 setScenarios(prev => ({
                     ...prev,
                     [gameId]: prev[gameId] === 'home' ? 'away' : 'home'
@@ -262,6 +241,8 @@
 
             const handleVote = async (type) => {
                 if (pulse.voted) return;
+                
+                // Optimistic UI Update
                 setPulse(prev => ({ ...prev, [type]: prev[type] + 1, voted: true }));
                 
                 if (isFirebaseActive) {
@@ -277,39 +258,37 @@
             };
 
             const handleShare = async () => {
-                // Hardcoded to the user's GitHub URL as requested
                 const url = "https://surbo.github.io/chiefs-tracker/"; 
                 if (navigator.share) {
                     try { await navigator.share({ title: 'Chiefs Playoff Simulator', url: url }); return; } catch (err) {}
                 }
-                try { await navigator.clipboard.writeText(url); setShareFeedback('Link Copied!'); } 
-                catch (err) { setShareFeedback('Copy URL manually'); }
-                setTimeout(() => setShareFeedback(''), 2500);
+                try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } 
+                catch (err) {}
             };
 
             return (
                 <div className="min-h-screen pb-20 overflow-x-hidden">
+                    {/* Header */}
                     <div className="bg-red-700 text-white p-4 shadow-lg sticky top-0 z-30">
                         <div className="max-w-xl mx-auto flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                                <Trophy className="w-6 h-6 text-yellow-400 flex-shrink-0" />
-                                <h1 className="text-xl font-bold tracking-tight truncate">Playoff Sim</h1>
+                                <Icon name="trophy" className="w-6 h-6 text-yellow-400" />
+                                <h1 className="text-xl font-bold tracking-tight">Kingdom Tracker</h1>
                             </div>
-                            <div className="flex items-center space-x-2">
-                                {/* Save Button Removed per user request */}
-                                <button onClick={handleShare} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors relative touch-manipulation">
-                                    <Share2 className="w-5 h-5" />
-                                    {shareFeedback && <div className="absolute top-10 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-50">{shareFeedback}</div>}
-                                </button>
-                            </div>
+                            <button onClick={handleShare} className="bg-white/10 hover:bg-white/20 p-2 rounded-full relative">
+                                <Icon name="share-2" className="w-5 h-5" />
+                                {copied && <div className="absolute top-10 right-0 bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg">Copied!</div>}
+                            </button>
                         </div>
                     </div>
 
                     <div className="max-w-xl mx-auto p-4 space-y-6">
+                        
+                        {/* FINISH CARD */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-red-600"></div>
                             <div className="p-5 text-center">
-                                <h2 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">PROJECTED FINISH</h2>
+                                <h2 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">LIVE PROJECTION</h2>
                                 <div className="flex justify-center items-end space-x-2 mb-2">
                                     <span className={`text-6xl font-black ${inPlayoffs ? 'text-green-600' : 'text-red-600'}`}>
                                         {chiefsRank || '--'}
@@ -317,86 +296,25 @@
                                     <span className="text-xl font-bold text-gray-400 mb-2">seed</span>
                                 </div>
                                 <div className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold shadow-sm ${inPlayoffs ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                    {inPlayoffs ? <CheckCircle2 className="w-4 h-4 mr-2"/> : <XCircle className="w-4 h-4 mr-2"/>}
+                                    {inPlayoffs ? <Icon name="check-circle-2" className="w-4 h-4 mr-2"/> : <Icon name="x-circle" className="w-4 h-4 mr-2"/>}
                                     {inPlayoffs ? 'PLAYOFF BOUND' : 'ELIMINATED'}
                                 </div>
-                                <div className="mt-6 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
-                                    <div>
-                                        <div className="text-xs text-gray-400 font-bold uppercase">Final Record</div>
-                                        <div className="text-2xl font-bold text-gray-800">
-                                            {chiefsStats ? `${chiefsStats.wins} - ${chiefsStats.losses}` : '...'}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="text-xs text-gray-400 font-bold uppercase">Panic Meter</div>
-                                        <div className="flex items-center justify-center space-x-1 mt-1">
-                                            {[1,2,3,4,5].map(i => (
-                                                <div key={i} className={`h-2 w-4 rounded-full ${i <= (inPlayoffs ? 2 : 5) ? 'bg-red-500' : 'bg-gray-200'}`}></div>
-                                            ))}
-                                        </div>
-                                    </div>
+                                <div className="mt-4 text-xs text-gray-400">
+                                    Current Record: {chiefsStats?.wins}-{chiefsStats?.losses}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center justify-between select-none">
-                            <button onClick={() => setActiveWeek(w => Math.max(13, w-1))} disabled={activeWeek === 13} className="arrow-btn p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30 disabled:bg-gray-100 disabled:text-gray-400 shadow-sm border border-red-100">
-                                <ChevronLeft className="w-6 h-6" />
-                            </button>
-                            <div className="text-center">
-                                <span className="text-xs text-gray-400 font-bold block uppercase tracking-wide">SCHEDULE</span>
-                                <span className="font-bold text-xl">Week {activeWeek}</span>
-                            </div>
-                            <button onClick={() => setActiveWeek(w => Math.min(18, w+1))} disabled={activeWeek === 18} className="arrow-btn p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30 disabled:bg-gray-100 disabled:text-gray-400 shadow-sm border border-red-100">
-                                <ChevronRight className="w-6 h-6" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-3">
-                            {FULL_SCHEDULE[activeWeek]?.map((game) => {
-                                const isHomeSelected = scenarios[game.id] === 'home';
-                                const winner = isHomeSelected ? game.home : game.away;
-                                const isGoodResult = winner === game.interest;
-                                return (
-                                    <div key={game.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 relative overflow-hidden transition-all duration-200">
-                                        {isGoodResult && (
-                                            <div className="absolute right-0 top-0 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-bl font-bold shadow-sm z-10">
-                                                GOOD FOR KC
-                                            </div>
-                                        )}
-                                        <div className="flex justify-between items-center mb-3 px-1">
-                                            <div className={`text-base font-bold ${isHomeSelected ? 'text-gray-900' : 'text-gray-400'}`}>{game.home}</div>
-                                            <div className="text-xs text-gray-300 font-bold">VS</div>
-                                            <div className={`text-base font-bold ${!isHomeSelected ? 'text-gray-900' : 'text-gray-400'}`}>{game.away}</div>
-                                        </div>
-                                        <div className="flex items-center justify-between bg-gray-100 rounded-lg p-1 mb-3">
-                                            <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
-                                                {game.home} Wins
-                                            </button>
-                                            <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${!isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
-                                                {game.away} Wins
-                                            </button>
-                                        </div>
-                                        <div className="flex items-start space-x-2 bg-blue-50 p-2 rounded text-blue-800">
-                                            <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                            <div className="text-xs leading-relaxed">
-                                                <span className="font-bold">Root for {game.interest}: </span>{game.reason}
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
+                        {/* LIVE STANDINGS TABLE */}
                         <div>
                             <h2 className="text-lg font-bold mb-3 flex items-center text-gray-800">
-                                <Activity className="w-5 h-5 mr-2 text-red-600"/> Live AFC Standings
+                                <Icon name="activity" className="w-5 h-5 mr-2 text-red-600"/> Real-Time Standings
                             </h2>
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                                 <table className="w-full text-sm">
                                     <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
                                         <tr>
-                                            <th className="px-4 py-3 text-left w-12">#</th>
+                                            <th className="px-4 py-3 text-left w-8">#</th>
                                             <th className="px-4 py-3 text-left">Team</th>
                                             <th className="px-4 py-3 text-right">Rec</th>
                                         </tr>
@@ -405,13 +323,12 @@
                                         {projectedStandings.map((team, idx) => {
                                             const rank = idx + 1;
                                             const isChiefs = team.name === 'Chiefs';
-                                            const isWildCardLine = rank === 7;
                                             return (
                                                 <React.Fragment key={team.id}>
                                                     <tr className={`${isChiefs ? 'bg-red-50' : 'bg-white'} ${rank <= 7 ? 'text-gray-900' : 'text-gray-400'}`}>
                                                         <td className="px-4 py-3 font-bold text-gray-500">{rank}</td>
                                                         <td className="px-4 py-3 flex items-center font-medium">
-                                                            <span className="mr-3 text-xl">{team.logo}</span>
+                                                            <span className="mr-2 text-xl">{team.logo}</span>
                                                             <div className="flex flex-col">
                                                                 <span className={isChiefs ? 'text-red-700 font-bold text-base' : ''}>{team.name}</span>
                                                                 {isChiefs && rank > 7 && <span className="text-[10px] text-red-500 font-bold uppercase">In the Hunt</span>}
@@ -419,7 +336,7 @@
                                                         </td>
                                                         <td className="px-4 py-3 text-right tabular-nums font-bold">{team.wins}-{team.losses}</td>
                                                     </tr>
-                                                    {isWildCardLine && (
+                                                    {rank === 7 && (
                                                         <tr className="bg-gray-800 text-white">
                                                             <td colSpan="3" className="px-4 py-1 text-[10px] text-center font-bold uppercase tracking-widest">Playoff Cutoff Line</td>
                                                         </tr>
@@ -432,6 +349,68 @@
                             </div>
                         </div>
 
+                        {/* SCHEDULE & TOGGLES */}
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center justify-between select-none">
+                            <button onClick={() => setActiveWeek(w => Math.max(13, w-1))} disabled={activeWeek === 13} className="p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30"><Icon name="chevron-left" className="w-6 h-6" /></button>
+                            <div className="text-center">
+                                <span className="text-xs text-gray-400 font-bold block uppercase tracking-wide">SCHEDULE</span>
+                                <span className="font-bold text-xl">Week {activeWeek}</span>
+                            </div>
+                            <button onClick={() => setActiveWeek(w => Math.min(18, w+1))} disabled={activeWeek === 18} className="p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30"><Icon name="chevron-right" className="w-6 h-6" /></button>
+                        </div>
+
+                        <div className="space-y-3">
+                            {FULL_SCHEDULE[activeWeek]?.map((game) => {
+                                const isHomeSelected = scenarios[game.id] === 'home';
+                                const isFinal = game.status === 'final';
+                                
+                                return (
+                                    <div key={game.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 relative overflow-hidden">
+                                        
+                                        {/* Header */}
+                                        <div className="flex justify-between items-center mb-3 px-1">
+                                            <div className="text-center w-1/3">
+                                                <div className={`text-base font-bold ${isFinal ? (game.winner === 'home' ? 'text-gray-900' : 'text-gray-400') : (isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>
+                                                    {game.home}
+                                                </div>
+                                            </div>
+                                            <div className="text-xs text-gray-300 font-bold">VS</div>
+                                            <div className="text-center w-1/3">
+                                                <div className={`text-base font-bold ${isFinal ? (game.winner === 'away' ? 'text-gray-900' : 'text-gray-400') : (!isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>
+                                                    {game.away}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* LOCKED UI (If Final) */}
+                                        {isFinal ? (
+                                            <div className="bg-gray-100 rounded-lg p-3 mb-3 flex flex-col items-center justify-center border border-gray-200">
+                                                <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1">FINAL SCORE</span>
+                                                <span className="text-xl font-black text-gray-800">{game.score}</span>
+                                                <div className="mt-2 text-[10px] text-gray-500 font-medium">Winner: {game.winner === 'home' ? game.home : game.away}</div>
+                                            </div>
+                                        ) : (
+                                            /* TOGGLE UI (If Scheduled) */
+                                            <div className="flex items-center justify-between bg-gray-100 rounded-lg p-1 mb-3">
+                                                <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+                                                    {game.home} Wins
+                                                </button>
+                                                <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${!isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+                                                    {game.away} Wins
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-start space-x-2 bg-blue-50 p-2 rounded text-blue-800">
+                                            <Icon name="info" className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                            <div className="text-xs leading-relaxed"><span className="font-bold">Root for {game.interest}: </span>{game.reason}</div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Kingdom Pulse */}
                         <div className="bg-gray-900 rounded-xl p-6 text-white shadow-lg">
                             <div className="flex items-center justify-between mb-4">
                                 <div>
@@ -441,7 +420,7 @@
                                         {localMode && <span className="text-[10px] bg-gray-700 px-1.5 rounded text-gray-300 flex items-center">Offline Mode</span>}
                                     </div>
                                 </div>
-                                <Calendar className="text-gray-600 w-8 h-8" />
+                                <Icon name="calendar" className="text-gray-600 w-8 h-8" />
                             </div>
                             <div className="flex space-x-3 mb-4">
                                 <button onClick={() => handleVote('yes')} disabled={pulse.voted} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-transform active:scale-95 border border-white/10 touch-manipulation flex justify-center items-center ${pulse.voted ? 'bg-green-600/20 text-white/50' : 'bg-green-600 hover:bg-green-500'}`}>
@@ -462,6 +441,7 @@
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
             );
@@ -472,4 +452,3 @@
     </script>
 </body>
 </html>
-
