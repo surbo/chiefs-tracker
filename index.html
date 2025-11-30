@@ -101,15 +101,26 @@
             ],
             16: [
                 { id: 'w16_kc_ten', home: 'Titans', away: 'Chiefs', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN' },
-                { id: 'w16_jax_den', home: 'Broncos', away: 'Jaguars', interest: 'Broncos', status: 'scheduled', reason: 'Jags are bigger threat to WC' }
+                { id: 'w16_jax_den', home: 'Broncos', away: 'Jaguars', interest: 'Broncos', status: 'scheduled', reason: 'Jags are bigger threat to WC' },
+                { id: 'w16_lac_dal', home: 'Cowboys', away: 'Chargers', interest: 'Cowboys', reason: 'Chargers are threat' },
+                { id: 'w16_pit_det', home: 'Lions', away: 'Steelers', interest: 'Lions', reason: 'Steelers are threat' },
+                { id: 'w16_buf_cle', home: 'Browns', away: 'Bills', interest: 'Browns', reason: 'Bills are threat' },
+                { id: 'w16_hou_lv', home: 'Texans', away: 'Raiders', interest: 'Raiders', reason: 'Texans are threat' }
             ],
             17: [
                 { id: 'w17_kc_den', home: 'Chiefs', away: 'Broncos', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN (Xmas Day)' },
-                { id: 'w17_lac_hou', home: 'Chargers', away: 'Texans', interest: 'Texans', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC' }
+                { id: 'w17_lac_hou', home: 'Chargers', away: 'Texans', interest: 'Texans', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC' },
+                { id: 'w17_buf_phi', home: 'Bills', away: 'Eagles', interest: 'Eagles', reason: 'Bills are threat' },
+                { id: 'w17_jax_ind', home: 'Colts', away: 'Jaguars', interest: 'Colts', reason: 'Jags are threat' },
+                { id: 'w17_pit_cle', home: 'Browns', away: 'Steelers', interest: 'Browns', reason: 'Steelers are threat' }
             ],
             18: [
                 { id: 'w18_kc_lv', home: 'Raiders', away: 'Chiefs', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN' },
-                { id: 'w18_den_lac', home: 'Broncos', away: 'Chargers', interest: 'Broncos', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC' }
+                { id: 'w18_den_lac', home: 'Broncos', away: 'Chargers', interest: 'Broncos', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC' },
+                { id: 'w18_hou_ind', home: 'Texans', away: 'Colts', interest: 'Colts', reason: 'Texans are threat' },
+                { id: 'w18_jax_ten', home: 'Jaguars', away: 'Titans', interest: 'Titans', reason: 'Jags are threat' },
+                { id: 'w18_pit_bal', home: 'Steelers', away: 'Ravens', interest: 'Ravens', reason: 'Steelers are threat' },
+                { id: 'w18_buf_nyj', home: 'Bills', away: 'Jets', interest: 'Jets', reason: 'Bills are threat' }
             ]
         };
 
@@ -128,15 +139,31 @@
 
             // --- Init ---
             useEffect(() => {
-                const initialScenarios = {};
-                Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                    if (game.status === 'final') {
-                        initialScenarios[game.id] = game.winner; 
-                    } else {
-                        initialScenarios[game.id] = game.interest === game.home ? 'home' : 'away';
-                    }
+                // Initialize Scenarios: Merge Saved Picks with Real Final Results
+                setScenarios(prev => {
+                    // 1. Check local storage for saved user picks
+                    let saved = {};
+                    try {
+                        const fromStorage = localStorage.getItem('chiefs_scenarios');
+                        if (fromStorage) saved = JSON.parse(fromStorage);
+                    } catch(e) {}
+
+                    const combined = { ...saved };
+
+                    // 2. Loop through schedule to ensure validity
+                    Object.values(FULL_SCHEDULE).flat().forEach(game => {
+                        // If game is FINAL in real life, force that result (overwriting any user pick)
+                        if (game.status === 'final') {
+                            combined[game.id] = game.winner; 
+                        } 
+                        // If not final and user hasn't picked yet, set default
+                        else if (!combined[game.id]) {
+                            combined[game.id] = game.interest === game.home ? 'home' : 'away';
+                        }
+                    });
+                    
+                    return combined;
                 });
-                setScenarios(initialScenarios);
 
                 // Pulse Logic
                 let unsubscribeSnapshot = () => {};
@@ -161,6 +188,14 @@
                 }
                 return () => unsubscribeSnapshot();
             }, []);
+
+            // Save picks whenever they change
+            useEffect(() => {
+                // Only save if we have scenarios loaded
+                if (Object.keys(scenarios).length > 0) {
+                    localStorage.setItem('chiefs_scenarios', JSON.stringify(scenarios));
+                }
+            }, [scenarios]);
 
             // --- Calc ---
             const projectedStandings = useMemo(() => {
