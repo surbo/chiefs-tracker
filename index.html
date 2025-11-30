@@ -34,6 +34,11 @@
 
     <script type="text/babel">
         // ==========================================
+        //  APP VERSION
+        // ==========================================
+        const APP_VERSION = "v2.01"; 
+
+        // ==========================================
         //  STEP 1: PASTE YOUR FIREBASE KEYS HERE
         // ==========================================
         const firebaseConfig = {
@@ -58,46 +63,45 @@
             }
         } catch (e) { console.warn("Offline Mode"); }
 
-        // --- 1. FULL 16-TEAM AFC ROSTER ---
+        // --- 1. FULL DATA ---
         const INITIAL_TEAMS = [
-            { id: 'ne', name: 'Patriots', wins: 10, losses: 2, confWins: 6, confLosses: 1, conf: 'AFC', division: 'East', logo: '🦁' },
-            { id: 'den', name: 'Broncos', wins: 9, losses: 2, confWins: 6, confLosses: 2, conf: 'AFC', division: 'West', logo: '🐴' },
-            { id: 'jax', name: 'Jaguars', wins: 8, losses: 4, confWins: 5, confLosses: 3, conf: 'AFC', division: 'South', logo: '🐆' }, 
-            { id: 'ind', name: 'Colts', wins: 8, losses: 4, confWins: 6, confLosses: 3, conf: 'AFC', division: 'South', logo: '🐎' },   
-            { id: 'hou', name: 'Texans', wins: 7, losses: 5, confWins: 6, confLosses: 2, conf: 'AFC', division: 'South', logo: '🐮' },  
-            { id: 'lac', name: 'Chargers', wins: 7, losses: 4, confWins: 6, confLosses: 2, conf: 'AFC', division: 'West', logo: '⚡' }, 
-            { id: 'buf', name: 'Bills', wins: 7, losses: 4, confWins: 4, confLosses: 3, conf: 'AFC', division: 'East', logo: '🦬' },   
-            { id: 'pit', name: 'Steelers', wins: 6, losses: 5, confWins: 5, confLosses: 2, conf: 'AFC', division: 'North', logo: '🔨' }, 
-            { id: 'bal', name: 'Ravens', wins: 6, losses: 6, confWins: 4, confLosses: 4, conf: 'AFC', division: 'North', logo: '🐦' },  
-            { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, confWins: 3, confLosses: 4, conf: 'AFC', division: 'West', logo: '🏹' },   
-            { id: 'mia', name: 'Dolphins', wins: 4, losses: 7, confWins: 2, confLosses: 6, conf: 'AFC', division: 'East', logo: '🐬' },
-            { id: 'cin', name: 'Bengals', wins: 4, losses: 8, confWins: 4, confLosses: 4, conf: 'AFC', division: 'North', logo: '🐯' },
-            // Added Remaining 4
-            { id: 'nyj', name: 'Jets', wins: 3, losses: 8, confWins: 1, confLosses: 6, conf: 'AFC', division: 'East', logo: '✈️' },
-            { id: 'cle', name: 'Browns', wins: 3, losses: 8, confWins: 2, confLosses: 6, conf: 'AFC', division: 'North', logo: '🐶' },
-            { id: 'lv', name: 'Raiders', wins: 2, losses: 9, confWins: 1, confLosses: 7, conf: 'AFC', division: 'West', logo: '☠️' },
-            { id: 'ten', name: 'Titans', wins: 1, losses: 10, confWins: 0, confLosses: 7, conf: 'AFC', division: 'South', logo: '⚔️' }
+            { id: 'ne', name: 'Patriots', wins: 10, losses: 2, confWins: 6, confLosses: 1, divWins: 4, divLosses: 0, conf: 'AFC', division: 'East', logo: '🦁' },
+            { id: 'den', name: 'Broncos', wins: 9, losses: 2, confWins: 6, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🐴' },
+            { id: 'jax', name: 'Jaguars', wins: 8, losses: 4, confWins: 5, confLosses: 3, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐆' }, 
+            { id: 'ind', name: 'Colts', wins: 8, losses: 4, confWins: 6, confLosses: 3, divWins: 2, divLosses: 2, conf: 'AFC', division: 'South', logo: '🐎' },   
+            { id: 'hou', name: 'Texans', wins: 7, losses: 5, confWins: 6, confLosses: 2, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐮' },  
+            { id: 'lac', name: 'Chargers', wins: 7, losses: 4, confWins: 6, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '⚡' }, 
+            { id: 'buf', name: 'Bills', wins: 7, losses: 4, confWins: 4, confLosses: 3, divWins: 2, divLosses: 1, conf: 'AFC', division: 'East', logo: '🦬' },   
+            { id: 'pit', name: 'Steelers', wins: 6, losses: 5, confWins: 5, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'North', logo: '🔨' }, 
+            { id: 'bal', name: 'Ravens', wins: 6, losses: 6, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐦' },  
+            { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, confWins: 3, confLosses: 4, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🏹' },   
+            { id: 'mia', name: 'Dolphins', wins: 4, losses: 7, confWins: 2, confLosses: 6, divWins: 1, divLosses: 3, conf: 'AFC', division: 'East', logo: '🐬' },
+            { id: 'cin', name: 'Bengals', wins: 4, losses: 8, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐯' },
+            { id: 'nyj', name: 'Jets', wins: 3, losses: 8, confWins: 1, confLosses: 6, divWins: 0, divLosses: 3, conf: 'AFC', division: 'East', logo: '✈️' },
+            { id: 'cle', name: 'Browns', wins: 3, losses: 8, confWins: 2, confLosses: 6, divWins: 1, divLosses: 2, conf: 'AFC', division: 'North', logo: '🐶' },
+            { id: 'lv', name: 'Raiders', wins: 2, losses: 9, confWins: 1, confLosses: 7, divWins: 0, divLosses: 3, conf: 'AFC', division: 'West', logo: '☠️' },
+            { id: 'ten', name: 'Titans', wins: 1, losses: 10, confWins: 0, confLosses: 7, divWins: 0, divLosses: 3, conf: 'AFC', division: 'South', logo: '⚔️' }
         ];
 
         // --- 2. SCHEDULE ---
         const FULL_SCHEDULE = {
             13: [
                 { id: 'w13_kc_dal', home: 'Cowboys', away: 'Chiefs', interest: 'Chiefs', status: 'final', winner: 'home', score: '31-28', isConfGame: false },
-                { id: 'w13_hou_ind', home: 'Colts', away: 'Texans', interest: 'Colts', status: 'final', winner: 'away', score: '16-20', isConfGame: true },
-                { id: 'w13_jax_ten', home: 'Titans', away: 'Jaguars', interest: 'Titans', status: 'final', winner: 'away', score: '3-25', isConfGame: true },
+                { id: 'w13_hou_ind', home: 'Colts', away: 'Texans', interest: 'Colts', status: 'final', winner: 'away', score: '16-20', isConfGame: true, isDivGame: true },
+                { id: 'w13_jax_ten', home: 'Titans', away: 'Jaguars', interest: 'Titans', status: 'final', winner: 'away', score: '3-25', isConfGame: true, isDivGame: true },
                 { id: 'w13_pit_buf', home: 'Steelers', away: 'Bills', interest: 'Bills', status: 'live', score: '10-7', reason: 'Knocks Steelers down to 6-6', isConfGame: true },
-                { id: 'w13_lac_lv', home: 'Chargers', away: 'Raiders', interest: 'Raiders', status: 'live', score: '0-0', reason: 'Chargers hold tiebreaker over KC', isConfGame: true },
+                { id: 'w13_lac_lv', home: 'Chargers', away: 'Raiders', interest: 'Raiders', status: 'live', score: '0-0', reason: 'Chargers hold tiebreaker over KC', isConfGame: true, isDivGame: true },
                 { id: 'w13_den_was', home: 'Commanders', away: 'Broncos', interest: 'Commanders', status: 'scheduled', reason: 'Catching the division leader', isConfGame: false }
             ],
             14: [
                 { id: 'w14_kc_hou', home: 'Chiefs', away: 'Texans', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN GAME', isConfGame: true },
                 { id: 'w14_buf_cin', home: 'Bills', away: 'Bengals', interest: 'Bengals', status: 'scheduled', reason: 'Bills are ahead of KC', isConfGame: true },
                 { id: 'w14_lac_phi', home: 'Chargers', away: 'Eagles', interest: 'Eagles', status: 'scheduled', reason: 'Chargers are ahead of KC', isConfGame: false },
-                { id: 'w14_jax_ind', home: 'Jaguars', away: 'Colts', interest: 'Colts', status: 'scheduled', reason: 'Jags are ahead of KC', isConfGame: true }
+                { id: 'w14_jax_ind', home: 'Jaguars', away: 'Colts', interest: 'Colts', status: 'scheduled', reason: 'Jags are ahead of KC', isConfGame: true, isDivGame: true }
             ],
             15: [
-                { id: 'w15_kc_lac', home: 'Chiefs', away: 'Chargers', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN (Division & WC)', isConfGame: true },
-                { id: 'w15_buf_ne', home: 'Patriots', away: 'Bills', interest: 'Patriots', status: 'scheduled', reason: 'Bills are ahead of KC', isConfGame: true },
+                { id: 'w15_kc_lac', home: 'Chiefs', away: 'Chargers', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN (Division & WC)', isConfGame: true, isDivGame: true },
+                { id: 'w15_buf_ne', home: 'Patriots', away: 'Bills', interest: 'Patriots', status: 'scheduled', reason: 'Bills are ahead of KC', isConfGame: true, isDivGame: true },
                 { id: 'w15_jax_nyj', home: 'Jaguars', away: 'Jets', interest: 'Jets', status: 'scheduled', reason: 'Jags are ahead of KC', isConfGame: true }
             ],
             16: [
@@ -109,19 +113,19 @@
                 { id: 'w16_hou_lv', home: 'Texans', away: 'Raiders', interest: 'Raiders', status: 'scheduled', reason: 'Texans are threat', isConfGame: true }
             ],
             17: [
-                { id: 'w17_kc_den', home: 'Chiefs', away: 'Broncos', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN (Xmas Day)', isConfGame: true },
+                { id: 'w17_kc_den', home: 'Chiefs', away: 'Broncos', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN (Xmas Day)', isConfGame: true, isDivGame: true },
                 { id: 'w17_lac_hou', home: 'Chargers', away: 'Texans', interest: 'Texans', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC', isConfGame: true },
                 { id: 'w17_buf_phi', home: 'Bills', away: 'Eagles', interest: 'Eagles', status: 'scheduled', reason: 'Bills are threat', isConfGame: false },
-                { id: 'w17_jax_ind', home: 'Colts', away: 'Jaguars', interest: 'Colts', status: 'scheduled', reason: 'Jags are threat', isConfGame: true },
-                { id: 'w17_pit_cle', home: 'Browns', away: 'Steelers', interest: 'Browns', status: 'scheduled', reason: 'Steelers are threat', isConfGame: true }
+                { id: 'w17_jax_ind', home: 'Colts', away: 'Jaguars', interest: 'Colts', status: 'scheduled', reason: 'Jags are threat', isConfGame: true, isDivGame: true },
+                { id: 'w17_pit_cle', home: 'Browns', away: 'Steelers', interest: 'Browns', status: 'scheduled', reason: 'Steelers are threat', isConfGame: true, isDivGame: true }
             ],
             18: [
-                { id: 'w18_kc_lv', home: 'Raiders', away: 'Chiefs', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN', isConfGame: true },
-                { id: 'w18_den_lac', home: 'Broncos', away: 'Chargers', interest: 'Broncos', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC', isConfGame: true },
-                { id: 'w18_hou_ind', home: 'Texans', away: 'Colts', interest: 'Colts', status: 'scheduled', reason: 'Texans are threat', isConfGame: true },
-                { id: 'w18_jax_ten', home: 'Jaguars', away: 'Titans', interest: 'Titans', status: 'scheduled', reason: 'Jags are threat', isConfGame: true },
-                { id: 'w18_pit_bal', home: 'Steelers', away: 'Ravens', interest: 'Ravens', status: 'scheduled', reason: 'Steelers are threat', isConfGame: true },
-                { id: 'w18_buf_nyj', home: 'Bills', away: 'Jets', interest: 'Jets', status: 'scheduled', reason: 'Bills are threat', isConfGame: true }
+                { id: 'w18_kc_lv', home: 'Raiders', away: 'Chiefs', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN', isConfGame: true, isDivGame: true },
+                { id: 'w18_den_lac', home: 'Broncos', away: 'Chargers', interest: 'Broncos', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC', isConfGame: true, isDivGame: true },
+                { id: 'w18_hou_ind', home: 'Texans', away: 'Colts', interest: 'Colts', status: 'scheduled', reason: 'Texans are threat', isConfGame: true, isDivGame: true },
+                { id: 'w18_jax_ten', home: 'Jaguars', away: 'Titans', interest: 'Titans', status: 'scheduled', reason: 'Jags are threat', isConfGame: true, isDivGame: true },
+                { id: 'w18_pit_bal', home: 'Steelers', away: 'Ravens', interest: 'Ravens', status: 'scheduled', reason: 'Steelers are threat', isConfGame: true, isDivGame: true },
+                { id: 'w18_buf_nyj', home: 'Bills', away: 'Jets', interest: 'Jets', status: 'scheduled', reason: 'Bills are threat', isConfGame: true, isDivGame: true }
             ]
         };
 
@@ -132,11 +136,11 @@
 
         function App() {
             const [pulse, setPulse] = useState({ yes: 1240, no: 650, voted: false });
+            const [localMode, setLocalMode] = useState(!isFirebaseActive);
             const [teams, setTeams] = useState(INITIAL_TEAMS);
             const [scenarios, setScenarios] = useState({});
             const [activeWeek, setActiveWeek] = useState(13);
             const [shareFeedback, setShareFeedback] = useState('');
-            const [localMode, setLocalMode] = useState(!isFirebaseActive);
 
             useEffect(() => {
                 setScenarios(prev => {
@@ -197,12 +201,26 @@
                     const awayTeam = currentTeams.find(t => t.name.includes(game.away) || game.away.includes(t.name));
                     
                     if (homeTeam) {
-                        if (winnerSide === 'home') { homeTeam.wins++; if (game.isConfGame) homeTeam.confWins++; }
-                        else { homeTeam.losses++; if (game.isConfGame) homeTeam.confLosses++; }
+                        if (winnerSide === 'home') { 
+                            homeTeam.wins++; 
+                            if(game.isConfGame) homeTeam.confWins++; 
+                            if(game.isDivGame) homeTeam.divWins++; 
+                        } else { 
+                            homeTeam.losses++; 
+                            if(game.isConfGame) homeTeam.confLosses++;
+                            if(game.isDivGame) homeTeam.divLosses++; 
+                        }
                     }
                     if (awayTeam) {
-                        if (winnerSide === 'away') { awayTeam.wins++; if (game.isConfGame) awayTeam.confWins++; }
-                        else { awayTeam.losses++; if (game.isConfGame) awayTeam.confLosses++; }
+                        if (winnerSide === 'away') { 
+                            awayTeam.wins++; 
+                            if(game.isConfGame) awayTeam.confWins++;
+                            if(game.isDivGame) awayTeam.divWins++;
+                        } else { 
+                            awayTeam.losses++; 
+                            if(game.isConfGame) awayTeam.confLosses++;
+                            if(game.isDivGame) awayTeam.divLosses++;
+                        }
                     }
                 });
 
@@ -218,33 +236,37 @@
                         team.losses += simLosses;
                         team.confWins += Math.round(simWins * 0.7);
                         team.confLosses += Math.round(simLosses * 0.7);
+                        team.divWins += Math.round(simWins * 0.3);
+                        team.divLosses += Math.round(simLosses * 0.3);
                     }
                 });
 
-                // 3. Sorting with Dynamic Tiebreakers
+                // 3. Sorting Engine
                 const divisions = { 'East': [], 'West': [], 'North': [], 'South': [] };
                 currentTeams.forEach(t => { if(divisions[t.division]) divisions[t.division].push(t); });
 
                 let winners = [];
                 let wildcards = [];
 
-                const sortTeams = (a, b) => {
+                const sortTeams = (a, b, context = 'wildcard') => {
                     const wa = a.wins/(a.wins+a.losses||1);
                     const wb = b.wins/(b.wins+b.losses||1);
                     if(Math.abs(wa-wb)>0.001) return wb-wa;
 
-                    // Dynamic Killers List: Check Week 15 Chargers result
                     let killers = ['Bills', 'Jaguars'];
                     const chargersGame = scenarios['w15_kc_lac'];
-                    // If KC loses Week 15 (home team is KC), Chargers remain a killer
-                    if (chargersGame !== 'home') {
-                        killers.push('Chargers');
-                    }
+                    if (chargersGame !== 'home') killers.push('Chargers');
 
                     if(a.name==='Chiefs'&&killers.includes(b.name)) return 1;
                     if(b.name==='Chiefs'&&killers.includes(a.name)) return -1;
                     if(a.name==='Chiefs'&&b.name==='Texans') return 1;
                     if(b.name==='Chiefs'&&a.name==='Texans') return -1;
+                    
+                    if (context === 'division' || a.division === b.division) {
+                        const da = a.divWins/(a.divWins+a.divLosses||1);
+                        const db = b.divWins/(b.divWins+b.divLosses||1);
+                        if(Math.abs(da-db)>0.001) return db-da;
+                    }
 
                     const ca = a.confWins/(a.confWins+a.confLosses||1);
                     const cb = b.confWins/(b.confWins+b.confLosses||1);
@@ -254,15 +276,15 @@
                 };
 
                 Object.values(divisions).forEach(divTeams => {
-                    divTeams.sort(sortTeams);
+                    divTeams.sort((a,b) => sortTeams(a,b, 'division'));
                     if (divTeams.length > 0) {
                         winners.push(divTeams[0]);
                         for(let i=1; i<divTeams.length; i++) wildcards.push(divTeams[i]);
                     }
                 });
 
-                winners.sort(sortTeams);
-                wildcards.sort(sortTeams);
+                winners.sort((a,b) => sortTeams(a,b, 'wildcard'));
+                wildcards.sort((a,b) => sortTeams(a,b, 'wildcard'));
 
                 return [...winners, ...wildcards];
             }, [scenarios, teams]);
@@ -425,6 +447,7 @@
                         </div>
                         <div className="mt-8 text-center text-xs text-gray-400 pb-8">
                             * Includes auto-projections for unlisted games to reach 17 total
+                            <div className="mt-2 font-mono opacity-50">Version {APP_VERSION}</div>
                         </div>
                     </div>
                 </div>
