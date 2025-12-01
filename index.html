@@ -42,7 +42,7 @@
         // ==========================================
         //  APP VERSION
         // ==========================================
-        const APP_VERSION = "v2.12"; 
+        const APP_VERSION = "v2.13"; 
 
         // ==========================================
         //  STEP 1: PASTE YOUR FIREBASE KEYS HERE
@@ -120,8 +120,8 @@
                 { id: 'w13_kc_dal', home: 'Cowboys', away: 'Chiefs', interest: 'Chiefs', status: 'final', winner: 'home', score: '31-28', isConfGame: false },
                 { id: 'w13_hou_ind', home: 'Colts', away: 'Texans', interest: 'Colts', status: 'final', winner: 'away', score: '16-20', isConfGame: true, isDivGame: true },
                 { id: 'w13_jax_ten', home: 'Titans', away: 'Jaguars', interest: 'Titans', status: 'final', winner: 'away', score: '3-25', isConfGame: true, isDivGame: true },
-                { id: 'w13_pit_buf', home: 'Steelers', away: 'Bills', interest: 'Bills', status: 'live', score: '10-7', reason: 'Drop Steelers to 6-6 (Bills own H2H tiebreaker over KC)', isConfGame: true },
-                { id: 'w13_lac_lv', home: 'Chargers', away: 'Raiders', interest: 'Raiders', status: 'live', score: '0-0', reason: 'Chargers hold tiebreaker over KC', isConfGame: true, isDivGame: true },
+                { id: 'w13_pit_buf', home: 'Steelers', away: 'Bills', interest: 'Bills', status: 'scheduled', reason: 'Drop Steelers to 6-6 (Bills own H2H tiebreaker over KC)', isConfGame: true },
+                { id: 'w13_lac_lv', home: 'Chargers', away: 'Raiders', interest: 'Raiders', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC', isConfGame: true, isDivGame: true },
                 { id: 'w13_den_was', home: 'Commanders', away: 'Broncos', interest: 'Commanders', status: 'scheduled', reason: 'Catching the division leader', isConfGame: false }
             ],
             14: [
@@ -234,7 +234,7 @@
             const projectedStandings = useMemo(() => {
                 let currentTeams = JSON.parse(JSON.stringify(teams));
 
-                // 1. Process Explicit Games (FIRST PASS: WINS/LOSSES ONLY)
+                // 1. Process Explicit Games
                 Object.values(FULL_SCHEDULE).flat().forEach(game => {
                     if (game.status === 'final') return;
                     if (!scenarios[game.id]) return;
@@ -245,6 +245,7 @@
                     if (homeTeam && awayTeam) {
                         if (winnerSide === 'home') { 
                             homeTeam.wins++; 
+                            homeTeam.sov += awayTeam.wins; 
                             if(game.isConfGame) homeTeam.confWins++; 
                             if(game.isDivGame) homeTeam.divWins++; 
                         } else { 
@@ -256,6 +257,7 @@
                     if (awayTeam) {
                         if (winnerSide === 'away') { 
                             awayTeam.wins++; 
+                            awayTeam.sov += homeTeam.wins; 
                             if(game.isConfGame) awayTeam.confWins++;
                             if(game.isDivGame) awayTeam.divWins++;
                         } else { 
@@ -487,6 +489,7 @@
                                 
                                 return (
                                     <div key={game.id} className={`bg-white rounded-lg p-4 shadow-sm relative overflow-hidden transition-all duration-300 ${isLive ? 'border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.15)]' : 'border border-gray-200'}`}>
+                                        {/* Status Header */}
                                         <div className="flex justify-between items-center mb-2">
                                             {isLive && (
                                                 <div className="flex items-center space-x-1.5 bg-green-50 text-green-600 px-2 py-0.5 rounded-full border border-green-200">
@@ -494,7 +497,7 @@
                                                     <span className="text-[10px] font-black tracking-wider">LIVE</span>
                                                 </div>
                                             )}
-                                            {!isLive && <div className="h-4"></div>}
+                                            {!isLive && <div className="h-4"></div>} {/* Spacer */}
                                         </div>
 
                                         <div className="flex justify-between items-center mb-3 px-1">
