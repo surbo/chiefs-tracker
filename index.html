@@ -16,12 +16,22 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; background-color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         .touch-manipulation { touch-action: manipulation; }
+        
+        /* Restored Live Styles */
         @keyframes live-pulse {
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
             70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
             100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
-        .live-indicator { animation: live-pulse 2s infinite; }
+        .live-border {
+            border-color: #22c55e !important;
+            border-width: 2px !important;
+            animation: live-pulse 2s infinite;
+        }
+        .live-indicator { 
+            animation: pulse 2s infinite; 
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     </style>
 
     <!-- Libraries -->
@@ -42,7 +52,7 @@
         // ==========================================
         //  APP VERSION
         // ==========================================
-        const APP_VERSION = "v2.13"; 
+        const APP_VERSION = "v2.20"; 
 
         // ==========================================
         //  STEP 1: PASTE YOUR FIREBASE KEYS HERE
@@ -69,41 +79,34 @@
             }
         } catch (e) { console.warn("Offline Mode"); }
 
-        // Global Error Handler
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            if (msg.toLowerCase().includes('script error') || msg.toLowerCase().includes('referenceerror')) {
-                 console.log("Critical error detected, clearing stale local storage.");
-            }
-            return false;
+        // --- 1. TEAM MAP ---
+        const TEAM_MAP = {
+            'KC': 'kc', 'BUF': 'buf', 'PIT': 'pit', 'HOU': 'hou', 'BAL': 'bal', 
+            'LAC': 'lac', 'DEN': 'den', 'IND': 'ind', 'JAX': 'jax', 'TEN': 'ten',
+            'MIA': 'mia', 'NYJ': 'nyj', 'NE': 'ne', 'CIN': 'cin', 'CLE': 'cle',
+            'LV': 'lv', 'LVR': 'lv', 'WSH': 'was', 'WAS': 'was', 'PHI': 'phi',
+            'DAL': 'dal', 'DET': 'det', 'SEA': 'sea', 'GB': 'gb', 'ARI': 'ari',
+            'SF': 'sf'
         };
 
-        // --- 1. FULL DATA (AFC + NFC) ---
+        // --- 2. BASELINE DATA ---
         const INITIAL_TEAMS = [
-            // AFC EAST
             { id: 'ne', name: 'Patriots', wins: 10, losses: 2, confWins: 6, confLosses: 1, divWins: 4, divLosses: 0, conf: 'AFC', division: 'East', logo: '🦁' },
-            { id: 'buf', name: 'Bills', wins: 7, losses: 4, confWins: 4, confLosses: 3, divWins: 2, divLosses: 1, conf: 'AFC', division: 'East', logo: '🦬' },
+            { id: 'buf', name: 'Bills', wins: 8, losses: 4, confWins: 5, confLosses: 3, divWins: 2, divLosses: 1, conf: 'AFC', division: 'East', logo: '🦬' },
             { id: 'mia', name: 'Dolphins', wins: 4, losses: 7, confWins: 2, confLosses: 6, divWins: 1, divLosses: 3, conf: 'AFC', division: 'East', logo: '🐬' },
             { id: 'nyj', name: 'Jets', wins: 3, losses: 8, confWins: 1, confLosses: 6, divWins: 0, divLosses: 3, conf: 'AFC', division: 'East', logo: '✈️' },
-            
-            // AFC WEST
             { id: 'den', name: 'Broncos', wins: 9, losses: 2, confWins: 6, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🐴' },
-            { id: 'lac', name: 'Chargers', wins: 7, losses: 4, confWins: 6, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '⚡' },
+            { id: 'lac', name: 'Chargers', wins: 8, losses: 4, confWins: 7, confLosses: 2, divWins: 3, divLosses: 1, conf: 'AFC', division: 'West', logo: '⚡' },
             { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, confWins: 3, confLosses: 4, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🏹' },
-            { id: 'lv', name: 'Raiders', wins: 2, losses: 9, confWins: 1, confLosses: 7, divWins: 0, divLosses: 3, conf: 'AFC', division: 'West', logo: '☠️' },
-
-            // AFC SOUTH
+            { id: 'lv', name: 'Raiders', wins: 2, losses: 10, confWins: 1, confLosses: 8, divWins: 0, divLosses: 4, conf: 'AFC', division: 'West', logo: '☠️' },
             { id: 'jax', name: 'Jaguars', wins: 8, losses: 4, confWins: 5, confLosses: 3, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐆' }, 
             { id: 'ind', name: 'Colts', wins: 8, losses: 4, confWins: 6, confLosses: 3, divWins: 2, divLosses: 2, conf: 'AFC', division: 'South', logo: '🐎' },
             { id: 'hou', name: 'Texans', wins: 7, losses: 5, confWins: 6, confLosses: 2, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐮' },
             { id: 'ten', name: 'Titans', wins: 1, losses: 10, confWins: 0, confLosses: 7, divWins: 0, divLosses: 3, conf: 'AFC', division: 'South', logo: '⚔️' },
-
-            // AFC NORTH
-            { id: 'pit', name: 'Steelers', wins: 6, losses: 5, confWins: 5, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'North', logo: '🔨' }, 
+            { id: 'pit', name: 'Steelers', wins: 6, losses: 6, confWins: 5, confLosses: 3, divWins: 2, divLosses: 1, conf: 'AFC', division: 'North', logo: '🔨' }, 
             { id: 'bal', name: 'Ravens', wins: 6, losses: 6, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐦' },
             { id: 'cin', name: 'Bengals', wins: 4, losses: 8, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐯' },
             { id: 'cle', name: 'Browns', wins: 3, losses: 8, confWins: 2, confLosses: 6, divWins: 1, divLosses: 2, conf: 'AFC', division: 'North', logo: '🐶' },
-
-            // NFC TEAMS
             { id: 'phi', name: 'Eagles', wins: 8, losses: 3, conf: 'NFC' },
             { id: 'dal', name: 'Cowboys', wins: 6, losses: 5, conf: 'NFC' },
             { id: 'det', name: 'Lions', wins: 7, losses: 5, conf: 'NFC' },
@@ -114,14 +117,15 @@
             { id: 'was', name: 'Commanders', wins: 3, losses: 8, conf: 'NFC' }
         ];
 
-        // --- 2. SCHEDULE ---
+        // --- 3. SCHEDULE ---
         const FULL_SCHEDULE = {
             13: [
                 { id: 'w13_kc_dal', home: 'Cowboys', away: 'Chiefs', interest: 'Chiefs', status: 'final', winner: 'home', score: '31-28', isConfGame: false },
                 { id: 'w13_hou_ind', home: 'Colts', away: 'Texans', interest: 'Colts', status: 'final', winner: 'away', score: '16-20', isConfGame: true, isDivGame: true },
                 { id: 'w13_jax_ten', home: 'Titans', away: 'Jaguars', interest: 'Titans', status: 'final', winner: 'away', score: '3-25', isConfGame: true, isDivGame: true },
-                { id: 'w13_pit_buf', home: 'Steelers', away: 'Bills', interest: 'Bills', status: 'scheduled', reason: 'Drop Steelers to 6-6 (Bills own H2H tiebreaker over KC)', isConfGame: true },
-                { id: 'w13_lac_lv', home: 'Chargers', away: 'Raiders', interest: 'Raiders', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC', isConfGame: true, isDivGame: true },
+                { id: 'w13_pit_buf', home: 'Steelers', away: 'Bills', interest: 'Bills', status: 'final', winner: 'away', score: '19-24', reason: 'Drop Steelers to 6-6', isConfGame: true },
+                { id: 'w13_lac_lv', home: 'Chargers', away: 'Raiders', interest: 'Raiders', status: 'final', winner: 'home', score: '27-17', reason: 'Chargers hold tiebreaker', isConfGame: true, isDivGame: true },
+                // DEN vs WAS (Set to Scheduled so Auto-Fetch can find it and mark it LIVE)
                 { id: 'w13_den_was', home: 'Commanders', away: 'Broncos', interest: 'Commanders', status: 'scheduled', reason: 'Catching the division leader', isConfGame: false }
             ],
             14: [
@@ -181,48 +185,113 @@
             const [localMode, setLocalMode] = useState(!isFirebaseActive);
             const [teams, setTeams] = useState(INITIAL_TEAMS);
             const [scenarios, setScenarios] = useState({});
+            const [liveData, setLiveData] = useState({});
             const [activeWeek, setActiveWeek] = useState(13);
             const [shareFeedback, setShareFeedback] = useState('');
+            const [lastFetchTime, setLastFetchTime] = useState(null);
 
+            // --- Init & Fetch ---
             useEffect(() => {
+                // 1. Load Saved Scenarios
+                let savedPicks = {};
+                try {
+                    const fromStorage = localStorage.getItem('chiefs_scenarios');
+                    if (fromStorage) savedPicks = JSON.parse(fromStorage);
+                } catch(e) {}
                 setScenarios(prev => {
-                    let saved = {};
-                    try {
-                        const fromStorage = localStorage.getItem('chiefs_scenarios');
-                        if (fromStorage) saved = JSON.parse(fromStorage);
-                    } catch(e) {}
-                    const combined = { ...saved };
+                    const combined = { ...savedPicks };
                     Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                        if (game.status === 'final') {
-                            combined[game.id] = game.winner; 
-                        } else if (!combined[game.id]) {
+                        if (!combined[game.id]) {
                             combined[game.id] = game.interest === game.home ? 'home' : 'away';
                         }
                     });
                     return combined;
                 });
 
-                let unsubscribeSnapshot = () => {};
+                // 2. Fetch Live Data
+                const fetchData = async () => {
+                    try {
+                        const scoreRes = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'));
+                        const scoreJson = await scoreRes.json();
+                        const scoreData = JSON.parse(scoreJson.contents);
+
+                        const standRes = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://site.api.espn.com/apis/v2/sports/football/nfl/standings'));
+                        const standJson = await standRes.json();
+                        const standData = JSON.parse(standJson.contents);
+
+                        // Update Teams
+                        const newTeams = [...INITIAL_TEAMS];
+                        if(standData.children) {
+                            standData.children.forEach(conf => {
+                                conf.standings.entries.forEach(entry => {
+                                    const abbr = entry.team.abbreviation;
+                                    const myId = TEAM_MAP[abbr] || abbr.toLowerCase();
+                                    const tIndex = newTeams.findIndex(t => t.id === myId);
+                                    if (tIndex > -1) {
+                                        const w = entry.stats.find(s => s.name === 'wins')?.value || 0;
+                                        const l = entry.stats.find(s => s.name === 'losses')?.value || 0;
+                                        newTeams[tIndex] = { ...newTeams[tIndex], wins: w, losses: l };
+                                    }
+                                });
+                            });
+                            setTeams(newTeams);
+                        }
+
+                        // Update Schedule (Live & Final)
+                        const newLiveData = {};
+                        scoreData.events.forEach(evt => {
+                            const comp = evt.competitions[0];
+                            const homeTeam = comp.competitors.find(c => c.homeAway === 'home').team.displayName;
+                            const awayTeam = comp.competitors.find(c => c.homeAway === 'away').team.displayName;
+                            const statusState = evt.status.type.state; 
+                            
+                            Object.values(FULL_SCHEDULE).flat().forEach(localGame => {
+                                if (localGame.status === 'final') return; 
+                                
+                                const match = (homeTeam.includes(localGame.home) || localGame.home.includes(homeTeam)) &&
+                                              (awayTeam.includes(localGame.away) || localGame.away.includes(awayTeam));
+                                
+                                if (match) {
+                                    if (statusState === 'in') {
+                                        newLiveData[localGame.id] = { status: 'live', winner: null };
+                                    } else if (statusState === 'post') {
+                                        const winner = parseInt(comp.competitors.find(c => c.homeAway === 'home').score) > parseInt(comp.competitors.find(c => c.homeAway === 'away').score) ? 'home' : 'away';
+                                        const score = `${comp.competitors.find(c => c.homeAway === 'away').score}-${comp.competitors.find(c => c.homeAway === 'home').score}`;
+                                        newLiveData[localGame.id] = { status: 'final', winner, score };
+                                    }
+                                }
+                            });
+                        });
+                        setLiveData(newLiveData);
+                        setLastFetchTime(new Date());
+
+                    } catch(e) {
+                        console.log("Data Fetch Failed, using defaults.");
+                    }
+                };
+
+                fetchData();
+                const interval = setInterval(fetchData, 60000);
+
+                // 3. Firebase Pulse
                 if (isFirebaseActive) {
                     auth.onAuthStateChanged(user => {
                         if (user) {
-                            unsubscribeSnapshot();
-                            unsubscribeSnapshot = db.collection('stats').doc('chiefs_pulse')
-                                .onSnapshot((doc) => {
-                                    if (doc.exists) {
-                                        const d = doc.data();
-                                        setPulse(prev => ({ ...prev, yes: d.yes || 0, no: d.no || 0 }));
-                                    }
-                                }, () => setLocalMode(true));
+                            db.collection('stats').doc('chiefs_pulse').onSnapshot(doc => {
+                                if (doc.exists) setPulse({ ...doc.data() });
+                            });
                         } else {
-                            auth.signInAnonymously().catch(() => setLocalMode(true));
+                            auth.signInAnonymously();
                         }
                     });
                 } else {
                     const saved = localStorage.getItem('chiefs_pulse_local');
-                    if(saved) setPulse(JSON.parse(saved));
+                    if(saved) {
+                        const parsed = JSON.parse(saved);
+                        setPulse({ yes: parsed.yes||0, no: parsed.no||0, voted: parsed.voted||false });
+                    }
                 }
-                return () => unsubscribeSnapshot();
+                return () => clearInterval(interval);
             }, []);
 
             useEffect(() => {
@@ -234,43 +303,51 @@
             const projectedStandings = useMemo(() => {
                 let currentTeams = JSON.parse(JSON.stringify(teams));
 
-                // 1. Process Explicit Games
                 Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                    if (game.status === 'final') return;
-                    if (!scenarios[game.id]) return;
-                    const winnerSide = scenarios[game.id];
+                    let status = game.status;
+                    let winnerSide = scenarios[game.id];
+                    
+                    // Override if live data says Final
+                    const live = liveData[game.id];
+                    if (live && live.status === 'final') {
+                        status = 'final';
+                        winnerSide = live.winner;
+                    } else if (status === 'final') {
+                        winnerSide = game.winner;
+                    }
+
+                    if (!winnerSide) return;
+
                     const homeTeam = currentTeams.find(t => t.name.includes(game.home) || game.home.includes(t.name));
                     const awayTeam = currentTeams.find(t => t.name.includes(game.away) || game.away.includes(t.name));
                     
-                    if (homeTeam && awayTeam) {
-                        if (winnerSide === 'home') { 
-                            homeTeam.wins++; 
-                            homeTeam.sov += awayTeam.wins; 
-                            if(game.isConfGame) homeTeam.confWins++; 
-                            if(game.isDivGame) homeTeam.divWins++; 
-                        } else { 
-                            homeTeam.losses++; 
-                            if(game.isConfGame) homeTeam.confLosses++;
-                            if(game.isDivGame) homeTeam.divLosses++; 
-                        }
-                    }
-                    if (awayTeam) {
-                        if (winnerSide === 'away') { 
-                            awayTeam.wins++; 
-                            awayTeam.sov += homeTeam.wins; 
-                            if(game.isConfGame) awayTeam.confWins++;
-                            if(game.isDivGame) awayTeam.divWins++;
-                        } else { 
-                            awayTeam.losses++; 
-                            if(game.isConfGame) awayTeam.confLosses++;
-                            if(game.isDivGame) awayTeam.divLosses++;
+                    if (status !== 'final') { // Only add simulated wins
+                         if (homeTeam && awayTeam) {
+                            if (winnerSide === 'home') { 
+                                homeTeam.wins++; 
+                                if(game.isConfGame) homeTeam.confWins++; 
+                                if(game.isDivGame) homeTeam.divWins++; 
+                            } else { 
+                                homeTeam.losses++; 
+                                if(game.isConfGame) homeTeam.confLosses++; 
+                                if(game.isDivGame) homeTeam.divLosses++; 
+                            }
+                            if (winnerSide === 'away') {
+                                awayTeam.wins++;
+                                if(game.isConfGame) awayTeam.confWins++;
+                                if(game.isDivGame) awayTeam.divWins++;
+                            } else {
+                                awayTeam.losses++;
+                                if(game.isConfGame) awayTeam.confLosses++;
+                                if(game.isDivGame) awayTeam.divLosses++;
+                            }
                         }
                     }
                 });
 
-                // 2. Filler Logic (Simulate to 17)
+                // Filler
                 currentTeams.forEach(team => {
-                    if (team.conf !== 'AFC') return; // Skip NFC for auto-fill
+                    if (team.conf !== 'AFC') return; 
                     const totalPlayed = team.wins + team.losses;
                     const remaining = 17 - totalPlayed;
                     if (remaining > 0) {
@@ -287,39 +364,29 @@
                     if(!team.sov) team.sov = 0;
                 });
 
-                // 3. SECOND PASS: CALCULATE SOV (Now that records are final)
-                // We loop through schedule again. For every game a team WON, we add the opponent's FINAL wins.
+                // SOV
                 Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                    // Determine winner
                     let winnerKey = null;
-                    if (game.status === 'final') winnerKey = game.winner;
-                    else if (scenarios[game.id]) winnerKey = scenarios[game.id];
+                    const live = liveData[game.id];
+                    if (live && live.status === 'final') winnerKey = live.winner;
+                    else if (game.status === 'final') winnerKey = game.winner;
+                    else winnerKey = scenarios[game.id];
 
                     if (!winnerKey) return;
-
-                    // Find teams again
-                    const homeTeam = currentTeams.find(t => t.name.includes(game.home) || game.home.includes(t.name));
-                    const awayTeam = currentTeams.find(t => t.name.includes(game.away) || game.away.includes(t.name));
-                    
+                    const homeTeam = currentTeams.find(t => t.name.includes(game.home));
+                    const awayTeam = currentTeams.find(t => t.name.includes(game.away));
                     if (homeTeam && awayTeam) {
-                        if (winnerKey === 'home') {
-                            if (homeTeam.conf === 'AFC') homeTeam.sov += awayTeam.wins;
-                        } else {
-                            if (awayTeam.conf === 'AFC') awayTeam.sov += homeTeam.wins;
-                        }
+                        if (winnerKey === 'home' && homeTeam.conf === 'AFC') homeTeam.sov += awayTeam.wins;
+                        else if (winnerKey === 'away' && awayTeam.conf === 'AFC') awayTeam.sov += homeTeam.wins;
                     }
                 });
 
-                // 4. Sorting Engine
+                // Sorting
                 const divisions = { 'East': [], 'West': [], 'North': [], 'South': [] };
                 currentTeams.forEach(t => { if(t.conf === 'AFC' && divisions[t.division]) divisions[t.division].push(t); });
 
-                let winners = [];
-                let wildcards = [];
-
                 const checkHeadToHead = (a, b) => {
-                    let aWins = 0;
-                    let bWins = 0;
+                    let aWins = 0, bWins = 0;
                     Object.values(FULL_SCHEDULE).flat().forEach(game => {
                         const isAHome = game.home.includes(a.name) || a.name.includes(game.home);
                         const isBHome = game.home.includes(b.name) || b.name.includes(game.home);
@@ -327,59 +394,45 @@
                         const isBAway = game.away.includes(b.name) || b.name.includes(game.away);
                         if ((isAHome && isBAway) || (isBHome && isAAway)) {
                             let winner = null;
-                            if (game.status === 'final') winner = game.winner;
-                            else if (scenarios[game.id]) winner = scenarios[game.id];
+                            const live = liveData[game.id];
+                            if (live && live.status === 'final') winner = live.winner;
+                            else if (game.status === 'final') winner = game.winner;
+                            else winner = scenarios[game.id];
                             if (winner) {
                                 if ((isAHome && winner === 'home') || (isAAway && winner === 'away')) aWins++;
                                 else bWins++;
                             }
                         }
                     });
-                    // KC manual killers
                     const killers = ['Bills', 'Jaguars'];
                     if(a.id === 'kc' && killers.includes(b.name)) return -1;
                     if(b.id === 'kc' && killers.includes(a.name)) return 1;
-                    if (aWins > bWins) return 1;
-                    if (bWins > aWins) return -1;
-                    return 0;
+                    return aWins - bWins;
                 };
 
-                const sortTeams = (a, b, context = 'wildcard') => {
-                    // 1. Win Pct
-                    const wa = a.wins/(a.wins+a.losses||1);
-                    const wb = b.wins/(b.wins+b.losses||1);
+                const sortTeams = (a, b, ctx) => {
+                    const wa = a.wins/(a.wins+a.losses||1), wb = b.wins/(b.wins+b.losses||1);
                     if(Math.abs(wa-wb)>0.001) return wb-wa;
-                    // 2. H2H
                     const h2h = checkHeadToHead(a, b);
                     if (h2h !== 0) return h2h;
-                    // 3. Division
-                    if (context === 'division' || a.division === b.division) {
-                        const da = a.divWins/(a.divWins+a.divLosses||1);
-                        const db = b.divWins/(b.divWins+b.divLosses||1);
+                    if (ctx === 'division' || a.division === b.division) {
+                        const da = a.divWins/(a.divWins+a.divLosses||1), db = b.divWins/(b.divWins+b.divLosses||1);
                         if(Math.abs(da-db)>0.001) return db-da;
                     }
-                    // 4. Conf
-                    const ca = a.confWins/(a.confWins+a.confLosses||1);
-                    const cb = b.confWins/(b.confWins+b.confLosses||1);
+                    const ca = a.confWins/(a.confWins+a.confLosses||1), cb = b.confWins/(b.confWins+b.confLosses||1);
                     if(Math.abs(ca-cb)>0.001) return cb-ca;
-                    // 5. SOV
-                    if (a.sov !== b.sov) return b.sov - a.sov;
-                    return 0;
+                    return b.sov - a.sov;
                 };
 
-                Object.values(divisions).forEach(divTeams => {
-                    divTeams.sort((a,b) => sortTeams(a,b, 'division'));
-                    if (divTeams.length > 0) {
-                        winners.push(divTeams[0]);
-                        for(let i=1; i<divTeams.length; i++) wildcards.push(divTeams[i]);
-                    }
+                let winners = [], wildcards = [];
+                Object.values(divisions).forEach(d => {
+                    d.sort((a,b) => sortTeams(a,b,'division'));
+                    if(d.length>0) { winners.push(d[0]); for(let i=1; i<d.length; i++) wildcards.push(d[i]); }
                 });
-
-                winners.sort((a,b) => sortTeams(a,b, 'wildcard'));
-                wildcards.sort((a,b) => sortTeams(a,b, 'wildcard'));
-
+                winners.sort((a,b) => sortTeams(a,b,'wildcard'));
+                wildcards.sort((a,b) => sortTeams(a,b,'wildcard'));
                 return [...winners, ...wildcards];
-            }, [scenarios, teams]);
+            }, [scenarios, teams, liveData]);
 
             const chiefsRank = projectedStandings.findIndex(t => t.name === 'Chiefs') + 1;
             const inPlayoffs = chiefsRank <= 7 && chiefsRank > 0;
@@ -387,35 +440,28 @@
 
             const handleToggle = (gameId) => {
                 const game = Object.values(FULL_SCHEDULE).flat().find(g => g.id === gameId);
-                if (game && game.status === 'final') return;
+                const live = liveData[gameId];
+                if ((game && game.status === 'final') || (live && live.status === 'final')) return;
                 setScenarios(prev => ({...prev, [gameId]: prev[gameId] === 'home' ? 'away' : 'home'}));
             };
 
             const handleVote = async (type) => {
                 if (pulse.voted) return;
                 setPulse(prev => ({ ...prev, [type]: prev[type] + 1, voted: true }));
-                
-                if (isFirebaseActive) {
-                    try {
-                        await db.collection('stats').doc('chiefs_pulse').set({
-                            [type]: firebase.firestore.FieldValue.increment(1)
-                        }, { merge: true });
-                    } catch (e) { console.error(e); }
-                } else {
-                    const newState = { ...pulse, [type]: pulse[type] + 1, voted: true };
-                    localStorage.setItem('chiefs_pulse_local', JSON.stringify(newState));
-                }
+                if (isFirebaseActive) try { await db.collection('stats').doc('chiefs_pulse').set({ [type]: firebase.firestore.FieldValue.increment(1) }, { merge: true }); } catch(e){}
+                else localStorage.setItem('chiefs_pulse_local', JSON.stringify({ ...pulse, [type]: pulse[type] + 1, voted: true }));
             };
 
             const handleShare = async () => {
                 const url = "https://surbo.github.io/chiefs-tracker/"; 
-                if (navigator.share) {
-                    try { await navigator.share({ title: 'Chiefs Playoff Simulator', url: url }); return; } catch (err) {}
-                }
-                try { await navigator.clipboard.writeText(url); setShareFeedback('Link Copied!'); } 
-                catch (err) { setShareFeedback('Copy URL manually'); }
+                if (navigator.share) { try { await navigator.share({ title: 'Chiefs Playoff Simulator', url: url }); return; } catch (err) {} }
+                try { await navigator.clipboard.writeText(url); setShareFeedback('Link Copied!'); } catch (err) { setShareFeedback('Copy URL manually'); }
                 setTimeout(() => setShareFeedback(''), 2500);
             };
+
+            const totalVotes = (pulse.yes || 0) + (pulse.no || 0);
+            const yesPct = totalVotes === 0 ? 0 : Math.round(((pulse.yes || 0) / totalVotes) * 100);
+            const noPct = totalVotes === 0 ? 0 : Math.round(((pulse.no || 0) / totalVotes) * 100);
 
             return (
                 <div className="min-h-screen pb-20 overflow-x-hidden">
@@ -426,6 +472,7 @@
                                 <h1 className="text-xl font-bold tracking-tight">Kingdom Tracker</h1>
                             </div>
                             <div className="flex items-center space-x-2">
+                                {lastFetchTime && <div className="w-2 h-2 bg-green-400 rounded-full"></div>}
                                 <button onClick={handleShare} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors relative touch-manipulation">
                                     <Icon name="share-2" className="w-5 h-5" />
                                     {shareFeedback && <div className="absolute top-10 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-50">{shareFeedback}</div>}
@@ -440,80 +487,47 @@
                             <div className="p-5 text-center">
                                 <h2 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">PROJECTED FINISH</h2>
                                 <div className="flex justify-center items-end space-x-2 mb-2">
-                                    <span className={`text-6xl font-black ${inPlayoffs ? 'text-green-600' : 'text-red-600'}`}>
-                                        {chiefsRank || '--'}
-                                    </span>
+                                    <span className={`text-6xl font-black ${inPlayoffs ? 'text-green-600' : 'text-red-600'}`}>{chiefsRank || '--'}</span>
                                     <span className="text-xl font-bold text-gray-400 mb-2">seed</span>
                                 </div>
                                 <div className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold shadow-sm ${inPlayoffs ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                     {inPlayoffs ? <Icon name="check-circle-2" className="w-4 h-4 mr-2" /> : <Icon name="x-circle" className="w-4 h-4 mr-2" />}
                                     {inPlayoffs ? 'PLAYOFF BOUND' : 'ELIMINATED'}
                                 </div>
-                                <div className="mt-6 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
-                                    <div>
-                                        <div className="text-xs text-gray-400 font-bold uppercase">Final Record</div>
-                                        <div className="text-2xl font-bold text-gray-800">
-                                            {chiefsStats ? `${chiefsStats.wins} - ${chiefsStats.losses}` : '...'}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="text-xs text-gray-400 font-bold uppercase">Panic Meter</div>
-                                        <div className="flex items-center justify-center space-x-1 mt-1">
-                                            {[1,2,3,4,5].map(i => (
-                                                <div key={i} className={`h-2 w-4 rounded-full ${i <= (inPlayoffs ? 2 : 5) ? 'bg-red-500' : 'bg-gray-200'}`}></div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
+                                <div className="mt-4 text-xs text-gray-400">Current Record: {chiefsStats?.wins}-{chiefsStats?.losses}*</div>
                             </div>
                         </div>
 
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center justify-between select-none">
-                            <button onClick={() => setActiveWeek(w => Math.max(13, w-1))} disabled={activeWeek === 13} className="arrow-btn p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30 disabled:bg-gray-100 disabled:text-gray-400 shadow-sm border border-red-100">
-                                <Icon name="chevron-left" className="w-6 h-6" />
-                            </button>
-                            <div className="text-center">
-                                <span className="text-xs text-gray-400 font-bold block uppercase tracking-wide">SCHEDULE</span>
-                                <span className="font-bold text-xl">Week {activeWeek}</span>
-                            </div>
-                            <button onClick={() => setActiveWeek(w => Math.min(18, w+1))} disabled={activeWeek === 18} className="arrow-btn p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30 disabled:bg-gray-100 disabled:text-gray-400 shadow-sm border border-red-100">
-                                <Icon name="chevron-right" className="w-6 h-6" />
-                            </button>
+                            <button onClick={() => setActiveWeek(w => Math.max(13, w-1))} disabled={activeWeek === 13} className="arrow-btn p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30 disabled:bg-gray-100 disabled:text-gray-400 shadow-sm border border-red-100"><Icon name="chevron-left" className="w-6 h-6" /></button>
+                            <div className="text-center"><span className="text-xs text-gray-400 font-bold block uppercase tracking-wide">SCHEDULE</span><span className="font-bold text-xl">Week {activeWeek}</span></div>
+                            <button onClick={() => setActiveWeek(w => Math.min(18, w+1))} disabled={activeWeek === 18} className="arrow-btn p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30 disabled:bg-gray-100 disabled:text-gray-400 shadow-sm border border-red-100"><Icon name="chevron-right" className="w-6 h-6" /></button>
                         </div>
 
                         <div className="space-y-3">
                             {FULL_SCHEDULE[activeWeek]?.map((game) => {
                                 const isHomeSelected = scenarios[game.id] === 'home';
-                                const isFinal = game.status === 'final';
-                                const isLive = game.status === 'live';
+                                const live = liveData[game.id];
+                                const isFinal = game.status === 'final' || (live && live.status === 'final');
+                                const isLive = live && live.status === 'live';
                                 
                                 return (
-                                    <div key={game.id} className={`bg-white rounded-lg p-4 shadow-sm relative overflow-hidden transition-all duration-300 ${isLive ? 'border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.15)]' : 'border border-gray-200'}`}>
-                                        {/* Status Header */}
+                                    <div key={game.id} className={`bg-white rounded-lg p-4 shadow-sm relative overflow-hidden transition-all duration-300 ${isLive ? 'live-border' : 'border border-gray-200'}`}>
                                         <div className="flex justify-between items-center mb-2">
-                                            {isLive && (
-                                                <div className="flex items-center space-x-1.5 bg-green-50 text-green-600 px-2 py-0.5 rounded-full border border-green-200">
-                                                    <div className="w-2 h-2 bg-green-500 rounded-full live-indicator"></div>
-                                                    <span className="text-[10px] font-black tracking-wider">LIVE</span>
-                                                </div>
-                                            )}
-                                            {!isLive && <div className="h-4"></div>} {/* Spacer */}
+                                            {isLive && <div className="flex items-center space-x-1.5 bg-green-50 text-green-600 px-2 py-0.5 rounded-full border border-green-200"><div className="w-2 h-2 bg-green-500 rounded-full live-indicator"></div><span className="text-[10px] font-black tracking-wider">LIVE</span></div>}
+                                            {!isLive && <div className="h-4"></div>}
                                         </div>
 
                                         <div className="flex justify-between items-center mb-3 px-1">
-                                            <div className="text-center w-1/3">
-                                                <div className={`text-base font-bold ${isFinal ? (game.winner === 'home' ? 'text-gray-900' : 'text-gray-400') : (isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.home}</div>
-                                            </div>
+                                            <div className="text-center w-1/3"><div className={`text-base font-bold ${isFinal ? (game.winner === 'home' || live?.winner === 'home' ? 'text-gray-900' : 'text-gray-400') : (isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.home}</div></div>
                                             <div className="text-xs text-gray-300 font-bold">VS</div>
-                                            <div className="text-center w-1/3">
-                                                <div className={`text-base font-bold ${isFinal ? (game.winner === 'away' ? 'text-gray-900' : 'text-gray-400') : (!isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.away}</div>
-                                            </div>
+                                            <div className="text-center w-1/3"><div className={`text-base font-bold ${isFinal ? (game.winner === 'away' || live?.winner === 'away' ? 'text-gray-900' : 'text-gray-400') : (!isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.away}</div></div>
                                         </div>
-
+                                        
                                         {isFinal ? (
                                             <div className="bg-gray-100 rounded-lg p-3 mb-3 flex flex-col items-center justify-center border border-gray-200">
                                                 <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1">FINAL SCORE</span>
-                                                <span className="text-xl font-black text-gray-800">{game.score}</span>
+                                                <span className="text-xl font-black text-gray-800">{live ? live.score : game.score}</span>
                                             </div>
                                         ) : (
                                             <div className="flex items-center justify-between bg-gray-100 rounded-lg p-1 mb-3">
@@ -521,54 +535,31 @@
                                                 <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${!isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>{game.away} Wins</button>
                                             </div>
                                         )}
-
-                                        <div className="flex items-start space-x-2 bg-blue-50 p-2 rounded text-blue-800">
-                                            <Icon name="info" className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                            <div className="text-xs leading-relaxed">
-                                                <span className="font-bold">Root for {game.interest}: </span>{game.reason}
-                                            </div>
-                                        </div>
+                                        <div className="flex items-start space-x-2 bg-blue-50 p-2 rounded text-blue-800"><Icon name="info" className="w-4 h-4 mt-0.5 flex-shrink-0" /><div className="text-xs leading-relaxed"><span className="font-bold">Root for {game.interest}: </span>{game.reason}</div></div>
                                     </div>
                                 );
                             })}
                         </div>
 
                         <div>
-                            <h2 className="text-lg font-bold mb-3 flex items-center text-gray-800">
-                                <Icon name="activity" className="w-5 h-5 mr-2 text-red-600" /> Live AFC Standings*
-                            </h2>
+                            <h2 className="text-lg font-bold mb-3 flex items-center text-gray-800"><Icon name="activity" className="w-5 h-5 mr-2 text-red-600" /> Live AFC Standings*</h2>
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                                 <table className="w-full text-sm">
                                     <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left w-12">#</th>
-                                            <th className="px-4 py-3 text-left">Team</th>
-                                            <th className="px-4 py-3 text-right">Rec</th>
-                                        </tr>
+                                        <tr><th className="px-4 py-3 text-left w-8">#</th><th className="px-4 py-3 text-left">Team</th><th className="px-4 py-3 text-right">Rec</th></tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
                                         {projectedStandings.map((team, idx) => {
                                             const rank = idx + 1;
                                             const isChiefs = team.name === 'Chiefs';
-                                            const isWildCardLine = rank === 7;
                                             return (
                                                 <React.Fragment key={team.id}>
                                                     <tr className={`${isChiefs ? 'bg-red-50' : 'bg-white'} ${rank <= 7 ? 'text-gray-900' : 'text-gray-400'} ${rank === 4 ? 'border-b-4 border-gray-200' : ''}`}>
                                                         <td className="px-4 py-3 font-bold text-gray-500">{rank}</td>
-                                                        <td className="px-4 py-3 flex items-center font-medium">
-                                                            <span className="mr-3 text-xl">{team.logo}</span>
-                                                            <div className="flex flex-col">
-                                                                <span className={isChiefs ? 'text-red-700 font-bold text-base' : ''}>{team.name}</span>
-                                                                {isChiefs && rank > 7 && <span className="text-[10px] text-red-500 font-bold uppercase">In the Hunt</span>}
-                                                            </div>
-                                                        </td>
+                                                        <td className="px-4 py-3 flex items-center font-medium"><span className="mr-3 text-xl">{team.logo}</span><div className="flex flex-col"><span className={isChiefs ? 'text-red-700 font-bold text-base' : ''}>{team.name}</span>{isChiefs && rank > 7 && <span className="text-[10px] text-red-500 font-bold uppercase">In the Hunt</span>}</div></td>
                                                         <td className="px-4 py-3 text-right tabular-nums font-bold">{team.wins}-{team.losses}</td>
                                                     </tr>
-                                                    {isWildCardLine && (
-                                                        <tr className="bg-gray-800 text-white">
-                                                            <td colSpan="3" className="px-4 py-1 text-[10px] text-center font-bold uppercase tracking-widest">Playoff Cutoff Line</td>
-                                                        </tr>
-                                                    )}
+                                                    {rank === 7 && <tr className="bg-gray-800 text-white"><td colSpan="3" className="px-4 py-1 text-[10px] text-center font-bold uppercase tracking-widest">Playoff Cutoff Line</td></tr>}
                                                 </React.Fragment>
                                             );
                                         })}
@@ -579,38 +570,19 @@
 
                         <div className="bg-gray-900 rounded-xl p-6 text-white shadow-lg">
                             <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <h3 className="text-lg font-bold">Kingdom Pulse</h3>
-                                    <div className="flex items-center space-x-2">
-                                        <p className="text-gray-400 text-xs">Join other fans.</p>
-                                        {localMode && <span className="text-[10px] bg-gray-700 px-1.5 rounded text-gray-300 flex items-center">Offline Mode</span>}
-                                    </div>
-                                </div>
+                                <div><h3 className="text-lg font-bold">Kingdom Pulse</h3><div className="flex items-center space-x-2"><p className="text-gray-400 text-xs">Join other fans.</p>{localMode && <span className="text-[10px] bg-gray-700 px-1.5 rounded text-gray-300 flex items-center">Offline Mode</span>}</div></div>
                                 <Icon name="calendar" className="text-gray-600 w-8 h-8" />
                             </div>
                             <div className="flex space-x-3 mb-4">
-                                <button onClick={() => handleVote('yes')} disabled={pulse.voted} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-transform active:scale-95 border border-white/10 touch-manipulation flex justify-center items-center ${pulse.voted ? 'bg-green-600/20 text-white/50' : 'bg-green-600 hover:bg-green-500'}`}>
-                                    BELIEVE 🚀
-                                </button>
-                                <button onClick={() => handleVote('no')} disabled={pulse.voted} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-transform active:scale-95 border border-white/10 touch-manipulation flex justify-center items-center ${pulse.voted ? 'bg-red-600/20 text-white/50' : 'bg-red-600 hover:bg-red-500'}`}>
-                                    IT'S OVER 💀
-                                </button>
+                                <button onClick={() => handleVote('yes')} disabled={pulse.voted} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-transform active:scale-95 border border-white/10 touch-manipulation flex justify-center items-center ${pulse.voted ? 'bg-green-600/20 text-white/50' : 'bg-green-600 hover:bg-green-500'}`}>BELIEVE 🚀</button>
+                                <button onClick={() => handleVote('no')} disabled={pulse.voted} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-transform active:scale-95 border border-white/10 touch-manipulation flex justify-center items-center ${pulse.voted ? 'bg-red-600/20 text-white/50' : 'bg-red-600 hover:bg-red-500'}`}>IT'S OVER 💀</button>
                             </div>
                             <div className="space-y-2">
-                                <div className="flex justify-between text-xs font-semibold mb-1 text-gray-400">
-                                    <span>Optimists ({Math.round((pulse.yes / ((pulse.yes + pulse.no) || 1)) * 100)}%)</span>
-                                    <span>Doomers ({Math.round((pulse.no / ((pulse.yes + pulse.no) || 1)) * 100)}%)</span>
-                                </div>
-                                <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden flex">
-                                    <div className="bg-green-500 h-full transition-all duration-500" style={{ width: `${(pulse.yes / ((pulse.yes + pulse.no) || 1)) * 100}%` }}></div>
-                                    <div className="bg-red-500 h-full transition-all duration-500" style={{ width: `${(pulse.no / ((pulse.yes + pulse.no) || 1)) * 100}%` }}></div>
-                                </div>
+                                <div className="flex justify-between text-xs font-semibold mb-1 text-gray-400"><span>Optimists ({yesPct}%)</span><span>Doomers ({noPct}%)</span></div>
+                                <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden flex"><div className="bg-green-500 h-full transition-all duration-500" style={{ width: `${yesPct}%` }}></div><div className="bg-red-500 h-full transition-all duration-500" style={{ width: `${noPct}%` }}></div></div>
                             </div>
                         </div>
-                        <div className="mt-8 text-center text-xs text-gray-400 pb-8">
-                            * Includes auto-projections for unlisted games to reach 17 total
-                            <div className="mt-2 font-mono opacity-50">Version {APP_VERSION}</div>
-                        </div>
+                        <div className="mt-8 text-center text-xs text-gray-400 pb-8">* Includes auto-projections for unlisted games to reach 17 total<div className="mt-2 font-mono opacity-50">Version {APP_VERSION}</div></div>
                     </div>
                 </div>
             );
