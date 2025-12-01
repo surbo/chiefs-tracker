@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- Cache Busting Meta Tags -->
+    <!-- Cache Busting -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -42,7 +42,7 @@
         // ==========================================
         //  APP VERSION
         // ==========================================
-        const APP_VERSION = "v2.09"; 
+        const APP_VERSION = "v2.12"; 
 
         // ==========================================
         //  STEP 1: PASTE YOUR FIREBASE KEYS HERE
@@ -69,33 +69,49 @@
             }
         } catch (e) { console.warn("Offline Mode"); }
 
-        // Global Error Handler for Mobile Cache Issues
+        // Global Error Handler
         window.onerror = function(msg, url, lineNo, columnNo, error) {
-            // If we hit a critical error, try clearing local storage (often the culprit for white screens on update)
             if (msg.toLowerCase().includes('script error') || msg.toLowerCase().includes('referenceerror')) {
                  console.log("Critical error detected, clearing stale local storage.");
             }
             return false;
         };
 
-        // --- 1. FULL DATA ---
+        // --- 1. FULL DATA (AFC + NFC) ---
         const INITIAL_TEAMS = [
+            // AFC EAST
             { id: 'ne', name: 'Patriots', wins: 10, losses: 2, confWins: 6, confLosses: 1, divWins: 4, divLosses: 0, conf: 'AFC', division: 'East', logo: '🦁' },
-            { id: 'den', name: 'Broncos', wins: 9, losses: 2, confWins: 6, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🐴' },
-            { id: 'jax', name: 'Jaguars', wins: 8, losses: 4, confWins: 5, confLosses: 3, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐆' }, 
-            { id: 'ind', name: 'Colts', wins: 8, losses: 4, confWins: 6, confLosses: 3, divWins: 2, divLosses: 2, conf: 'AFC', division: 'South', logo: '🐎' },   
-            { id: 'hou', name: 'Texans', wins: 7, losses: 5, confWins: 6, confLosses: 2, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐮' },  
-            { id: 'lac', name: 'Chargers', wins: 7, losses: 4, confWins: 6, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '⚡' }, 
-            { id: 'buf', name: 'Bills', wins: 7, losses: 4, confWins: 4, confLosses: 3, divWins: 2, divLosses: 1, conf: 'AFC', division: 'East', logo: '🦬' },   
-            { id: 'pit', name: 'Steelers', wins: 6, losses: 5, confWins: 5, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'North', logo: '🔨' }, 
-            { id: 'bal', name: 'Ravens', wins: 6, losses: 6, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐦' },  
-            { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, confWins: 3, confLosses: 4, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🏹' },   
+            { id: 'buf', name: 'Bills', wins: 7, losses: 4, confWins: 4, confLosses: 3, divWins: 2, divLosses: 1, conf: 'AFC', division: 'East', logo: '🦬' },
             { id: 'mia', name: 'Dolphins', wins: 4, losses: 7, confWins: 2, confLosses: 6, divWins: 1, divLosses: 3, conf: 'AFC', division: 'East', logo: '🐬' },
-            { id: 'cin', name: 'Bengals', wins: 4, losses: 8, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐯' },
             { id: 'nyj', name: 'Jets', wins: 3, losses: 8, confWins: 1, confLosses: 6, divWins: 0, divLosses: 3, conf: 'AFC', division: 'East', logo: '✈️' },
-            { id: 'cle', name: 'Browns', wins: 3, losses: 8, confWins: 2, confLosses: 6, divWins: 1, divLosses: 2, conf: 'AFC', division: 'North', logo: '🐶' },
+            
+            // AFC WEST
+            { id: 'den', name: 'Broncos', wins: 9, losses: 2, confWins: 6, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🐴' },
+            { id: 'lac', name: 'Chargers', wins: 7, losses: 4, confWins: 6, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '⚡' },
+            { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, confWins: 3, confLosses: 4, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🏹' },
             { id: 'lv', name: 'Raiders', wins: 2, losses: 9, confWins: 1, confLosses: 7, divWins: 0, divLosses: 3, conf: 'AFC', division: 'West', logo: '☠️' },
-            { id: 'ten', name: 'Titans', wins: 1, losses: 10, confWins: 0, confLosses: 7, divWins: 0, divLosses: 3, conf: 'AFC', division: 'South', logo: '⚔️' }
+
+            // AFC SOUTH
+            { id: 'jax', name: 'Jaguars', wins: 8, losses: 4, confWins: 5, confLosses: 3, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐆' }, 
+            { id: 'ind', name: 'Colts', wins: 8, losses: 4, confWins: 6, confLosses: 3, divWins: 2, divLosses: 2, conf: 'AFC', division: 'South', logo: '🐎' },
+            { id: 'hou', name: 'Texans', wins: 7, losses: 5, confWins: 6, confLosses: 2, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐮' },
+            { id: 'ten', name: 'Titans', wins: 1, losses: 10, confWins: 0, confLosses: 7, divWins: 0, divLosses: 3, conf: 'AFC', division: 'South', logo: '⚔️' },
+
+            // AFC NORTH
+            { id: 'pit', name: 'Steelers', wins: 6, losses: 5, confWins: 5, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'North', logo: '🔨' }, 
+            { id: 'bal', name: 'Ravens', wins: 6, losses: 6, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐦' },
+            { id: 'cin', name: 'Bengals', wins: 4, losses: 8, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐯' },
+            { id: 'cle', name: 'Browns', wins: 3, losses: 8, confWins: 2, confLosses: 6, divWins: 1, divLosses: 2, conf: 'AFC', division: 'North', logo: '🐶' },
+
+            // NFC TEAMS
+            { id: 'phi', name: 'Eagles', wins: 8, losses: 3, conf: 'NFC' },
+            { id: 'dal', name: 'Cowboys', wins: 6, losses: 5, conf: 'NFC' },
+            { id: 'det', name: 'Lions', wins: 7, losses: 5, conf: 'NFC' },
+            { id: 'sea', name: 'Seahawks', wins: 8, losses: 3, conf: 'NFC' },
+            { id: 'gb', name: 'Packers', wins: 8, losses: 3, conf: 'NFC' },
+            { id: 'ari', name: 'Cardinals', wins: 3, losses: 8, conf: 'NFC' },
+            { id: 'sf', name: '49ers', wins: 8, losses: 4, conf: 'NFC' },
+            { id: 'was', name: 'Commanders', wins: 3, losses: 8, conf: 'NFC' }
         ];
 
         // --- 2. SCHEDULE ---
@@ -144,28 +160,19 @@
             ]
         };
 
-        // --- 3. ICON COMPONENT (Robust Implementation) ---
+        // --- 3. ICON COMPONENT ---
         const Icon = ({ name, className }) => {
             const ref = useRef(null);
-
             useEffect(() => {
                 if (window.lucide && ref.current) {
-                    // This method prevents React and Lucide from fighting over the DOM
-                    // 1. Manually set the inner HTML to the <i> tag
                     ref.current.innerHTML = `<i data-lucide="${name}" class="${className || ''}"></i>`;
-                    
-                    // 2. Tell Lucide to find that tag and replace it with an SVG
                     window.lucide.createIcons({
                         root: ref.current,
                         nameAttr: 'data-lucide',
-                        attrs: {
-                            class: className
-                        }
+                        attrs: { class: className }
                     });
                 }
             }, [name, className]);
-
-            // React renders this empty span, Lucide fills it.
             return <span ref={ref} className="inline-flex items-center justify-center"></span>;
         };
 
@@ -227,7 +234,7 @@
             const projectedStandings = useMemo(() => {
                 let currentTeams = JSON.parse(JSON.stringify(teams));
 
-                // 1. Process Explicit Games
+                // 1. Process Explicit Games (FIRST PASS: WINS/LOSSES ONLY)
                 Object.values(FULL_SCHEDULE).flat().forEach(game => {
                     if (game.status === 'final') return;
                     if (!scenarios[game.id]) return;
@@ -238,7 +245,6 @@
                     if (homeTeam && awayTeam) {
                         if (winnerSide === 'home') { 
                             homeTeam.wins++; 
-                            homeTeam.sov += awayTeam.wins; // Basic SOV calc
                             if(game.isConfGame) homeTeam.confWins++; 
                             if(game.isDivGame) homeTeam.divWins++; 
                         } else { 
@@ -250,7 +256,6 @@
                     if (awayTeam) {
                         if (winnerSide === 'away') { 
                             awayTeam.wins++; 
-                            awayTeam.sov += homeTeam.wins; // Basic SOV calc
                             if(game.isConfGame) awayTeam.confWins++;
                             if(game.isDivGame) awayTeam.divWins++;
                         } else { 
@@ -263,6 +268,7 @@
 
                 // 2. Filler Logic (Simulate to 17)
                 currentTeams.forEach(team => {
+                    if (team.conf !== 'AFC') return; // Skip NFC for auto-fill
                     const totalPlayed = team.wins + team.losses;
                     const remaining = 17 - totalPlayed;
                     if (remaining > 0) {
@@ -276,81 +282,86 @@
                         team.divWins += Math.round(simWins * 0.3);
                         team.divLosses += Math.round(simLosses * 0.3);
                     }
-                    // Init SOV if undefined
                     if(!team.sov) team.sov = 0;
                 });
 
-                // 3. Sorting Engine
+                // 3. SECOND PASS: CALCULATE SOV (Now that records are final)
+                // We loop through schedule again. For every game a team WON, we add the opponent's FINAL wins.
+                Object.values(FULL_SCHEDULE).flat().forEach(game => {
+                    // Determine winner
+                    let winnerKey = null;
+                    if (game.status === 'final') winnerKey = game.winner;
+                    else if (scenarios[game.id]) winnerKey = scenarios[game.id];
+
+                    if (!winnerKey) return;
+
+                    // Find teams again
+                    const homeTeam = currentTeams.find(t => t.name.includes(game.home) || game.home.includes(t.name));
+                    const awayTeam = currentTeams.find(t => t.name.includes(game.away) || game.away.includes(t.name));
+                    
+                    if (homeTeam && awayTeam) {
+                        if (winnerKey === 'home') {
+                            if (homeTeam.conf === 'AFC') homeTeam.sov += awayTeam.wins;
+                        } else {
+                            if (awayTeam.conf === 'AFC') awayTeam.sov += homeTeam.wins;
+                        }
+                    }
+                });
+
+                // 4. Sorting Engine
                 const divisions = { 'East': [], 'West': [], 'North': [], 'South': [] };
-                currentTeams.forEach(t => { if(divisions[t.division]) divisions[t.division].push(t); });
+                currentTeams.forEach(t => { if(t.conf === 'AFC' && divisions[t.division]) divisions[t.division].push(t); });
 
                 let winners = [];
                 let wildcards = [];
 
-                // UNIVERSAL HEAD-TO-HEAD CHECK
                 const checkHeadToHead = (a, b) => {
-                    // Check if they played in schedule
                     let aWins = 0;
                     let bWins = 0;
-                    
                     Object.values(FULL_SCHEDULE).flat().forEach(game => {
                         const isAHome = game.home.includes(a.name) || a.name.includes(game.home);
                         const isBHome = game.home.includes(b.name) || b.name.includes(game.home);
                         const isAAway = game.away.includes(a.name) || a.name.includes(game.away);
                         const isBAway = game.away.includes(b.name) || b.name.includes(game.away);
-
-                        // Only if they played each other
                         if ((isAHome && isBAway) || (isBHome && isAAway)) {
-                            // Check winner
                             let winner = null;
                             if (game.status === 'final') winner = game.winner;
                             else if (scenarios[game.id]) winner = scenarios[game.id];
-
                             if (winner) {
                                 if ((isAHome && winner === 'home') || (isAAway && winner === 'away')) aWins++;
                                 else bWins++;
                             }
                         }
                     });
-
-                    // Add hardcoded past results (KC vs Bills, etc.)
-                    // This is simplified for this demo, assumes schedule captures future games
-                    // We maintain the hardcoded "Killers" list for pre-existing losses not in schedule array
-                    const killers = ['Bills', 'Jaguars']; // Teams KC lost to before Week 13
+                    // KC manual killers
+                    const killers = ['Bills', 'Jaguars'];
                     if(a.id === 'kc' && killers.includes(b.name)) return -1;
                     if(b.id === 'kc' && killers.includes(a.name)) return 1;
-
                     if (aWins > bWins) return 1;
                     if (bWins > aWins) return -1;
                     return 0;
                 };
 
                 const sortTeams = (a, b, context = 'wildcard') => {
-                    // 1. Win Percentage
+                    // 1. Win Pct
                     const wa = a.wins/(a.wins+a.losses||1);
                     const wb = b.wins/(b.wins+b.losses||1);
                     if(Math.abs(wa-wb)>0.001) return wb-wa;
-
-                    // 2. Head-to-Head (Universal)
+                    // 2. H2H
                     const h2h = checkHeadToHead(a, b);
                     if (h2h !== 0) return h2h;
-                    
-                    // 3. Division Record (Context Dependent)
+                    // 3. Division
                     if (context === 'division' || a.division === b.division) {
                         const da = a.divWins/(a.divWins+a.divLosses||1);
                         const db = b.divWins/(b.divWins+b.divLosses||1);
                         if(Math.abs(da-db)>0.001) return db-da;
                     }
-
-                    // 4. Conference Record
+                    // 4. Conf
                     const ca = a.confWins/(a.confWins+a.confLosses||1);
                     const cb = b.confWins/(b.confWins+b.confLosses||1);
                     if(Math.abs(ca-cb)>0.001) return cb-ca;
-
-                    // 5. Strength of Victory (SOV)
-                    // Used as tiebreaker for deep ties
+                    // 5. SOV
                     if (a.sov !== b.sov) return b.sov - a.sov;
-
                     return 0;
                 };
 
@@ -395,7 +406,6 @@
             };
 
             const handleShare = async () => {
-                // Hardcoded to the user's GitHub URL as requested
                 const url = "https://surbo.github.io/chiefs-tracker/"; 
                 if (navigator.share) {
                     try { await navigator.share({ title: 'Chiefs Playoff Simulator', url: url }); return; } catch (err) {}
@@ -414,7 +424,6 @@
                                 <h1 className="text-xl font-bold tracking-tight">Kingdom Tracker</h1>
                             </div>
                             <div className="flex items-center space-x-2">
-                                {/* Save Button Removed per user request */}
                                 <button onClick={handleShare} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors relative touch-manipulation">
                                     <Icon name="share-2" className="w-5 h-5" />
                                     {shareFeedback && <div className="absolute top-10 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-50">{shareFeedback}</div>}
@@ -473,28 +482,43 @@
                         <div className="space-y-3">
                             {FULL_SCHEDULE[activeWeek]?.map((game) => {
                                 const isHomeSelected = scenarios[game.id] === 'home';
-                                const winner = isHomeSelected ? game.home : game.away;
-                                const isGoodResult = winner === game.interest;
+                                const isFinal = game.status === 'final';
+                                const isLive = game.status === 'live';
+                                
                                 return (
-                                    <div key={game.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 relative overflow-hidden transition-all duration-200">
-                                        {isGoodResult && (
-                                            <div className="absolute right-0 top-0 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-bl font-bold shadow-sm z-10">
-                                                GOOD FOR KC
+                                    <div key={game.id} className={`bg-white rounded-lg p-4 shadow-sm relative overflow-hidden transition-all duration-300 ${isLive ? 'border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.15)]' : 'border border-gray-200'}`}>
+                                        <div className="flex justify-between items-center mb-2">
+                                            {isLive && (
+                                                <div className="flex items-center space-x-1.5 bg-green-50 text-green-600 px-2 py-0.5 rounded-full border border-green-200">
+                                                    <div className="w-2 h-2 bg-green-500 rounded-full live-indicator"></div>
+                                                    <span className="text-[10px] font-black tracking-wider">LIVE</span>
+                                                </div>
+                                            )}
+                                            {!isLive && <div className="h-4"></div>}
+                                        </div>
+
+                                        <div className="flex justify-between items-center mb-3 px-1">
+                                            <div className="text-center w-1/3">
+                                                <div className={`text-base font-bold ${isFinal ? (game.winner === 'home' ? 'text-gray-900' : 'text-gray-400') : (isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.home}</div>
+                                            </div>
+                                            <div className="text-xs text-gray-300 font-bold">VS</div>
+                                            <div className="text-center w-1/3">
+                                                <div className={`text-base font-bold ${isFinal ? (game.winner === 'away' ? 'text-gray-900' : 'text-gray-400') : (!isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.away}</div>
+                                            </div>
+                                        </div>
+
+                                        {isFinal ? (
+                                            <div className="bg-gray-100 rounded-lg p-3 mb-3 flex flex-col items-center justify-center border border-gray-200">
+                                                <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1">FINAL SCORE</span>
+                                                <span className="text-xl font-black text-gray-800">{game.score}</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-between bg-gray-100 rounded-lg p-1 mb-3">
+                                                <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>{game.home} Wins</button>
+                                                <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${!isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>{game.away} Wins</button>
                                             </div>
                                         )}
-                                        <div className="flex justify-between items-center mb-3 px-1">
-                                            <div className={`text-base font-bold ${isHomeSelected ? 'text-gray-900' : 'text-gray-400'}`}>{game.home}</div>
-                                            <div className="text-xs text-gray-300 font-bold">VS</div>
-                                            <div className={`text-base font-bold ${!isHomeSelected ? 'text-gray-900' : 'text-gray-400'}`}>{game.away}</div>
-                                        </div>
-                                        <div className="flex items-center justify-between bg-gray-100 rounded-lg p-1 mb-3">
-                                            <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
-                                                {game.home} Wins
-                                            </button>
-                                            <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${!isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
-                                                {game.away} Wins
-                                            </button>
-                                        </div>
+
                                         <div className="flex items-start space-x-2 bg-blue-50 p-2 rounded text-blue-800">
                                             <Icon name="info" className="w-4 h-4 mt-0.5 flex-shrink-0" />
                                             <div className="text-xs leading-relaxed">
