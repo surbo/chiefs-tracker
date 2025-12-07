@@ -16,22 +16,12 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; background-color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         .touch-manipulation { touch-action: manipulation; }
-        
-        /* Restored Live Styles */
         @keyframes live-pulse {
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
             70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
             100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
-        .live-border {
-            border-color: #22c55e !important;
-            border-width: 2px !important;
-            animation: live-pulse 2s infinite;
-        }
-        .live-indicator { 
-            animation: pulse 2s infinite; 
-        }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .live-indicator { animation: live-pulse 2s infinite; }
     </style>
 
     <!-- Libraries -->
@@ -52,7 +42,7 @@
         // ==========================================
         //  APP VERSION
         // ==========================================
-        const APP_VERSION = "v2.20"; 
+        const APP_VERSION = "v3.01 (Week 14 Live)"; 
 
         // ==========================================
         //  STEP 1: PASTE YOUR FIREBASE KEYS HERE
@@ -79,34 +69,25 @@
             }
         } catch (e) { console.warn("Offline Mode"); }
 
-        // --- 1. TEAM MAP ---
-        const TEAM_MAP = {
-            'KC': 'kc', 'BUF': 'buf', 'PIT': 'pit', 'HOU': 'hou', 'BAL': 'bal', 
-            'LAC': 'lac', 'DEN': 'den', 'IND': 'ind', 'JAX': 'jax', 'TEN': 'ten',
-            'MIA': 'mia', 'NYJ': 'nyj', 'NE': 'ne', 'CIN': 'cin', 'CLE': 'cle',
-            'LV': 'lv', 'LVR': 'lv', 'WSH': 'was', 'WAS': 'was', 'PHI': 'phi',
-            'DAL': 'dal', 'DET': 'det', 'SEA': 'sea', 'GB': 'gb', 'ARI': 'ari',
-            'SF': 'sf'
-        };
-
-        // --- 2. BASELINE DATA ---
+        // --- 1. FULL DATA (Reset to Week 13 Final / Week 14 Start) ---
         const INITIAL_TEAMS = [
             { id: 'ne', name: 'Patriots', wins: 10, losses: 2, confWins: 6, confLosses: 1, divWins: 4, divLosses: 0, conf: 'AFC', division: 'East', logo: '🦁' },
-            { id: 'buf', name: 'Bills', wins: 8, losses: 4, confWins: 5, confLosses: 3, divWins: 2, divLosses: 1, conf: 'AFC', division: 'East', logo: '🦬' },
-            { id: 'mia', name: 'Dolphins', wins: 4, losses: 7, confWins: 2, confLosses: 6, divWins: 1, divLosses: 3, conf: 'AFC', division: 'East', logo: '🐬' },
-            { id: 'nyj', name: 'Jets', wins: 3, losses: 8, confWins: 1, confLosses: 6, divWins: 0, divLosses: 3, conf: 'AFC', division: 'East', logo: '✈️' },
-            { id: 'den', name: 'Broncos', wins: 9, losses: 2, confWins: 6, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🐴' },
-            { id: 'lac', name: 'Chargers', wins: 8, losses: 4, confWins: 7, confLosses: 2, divWins: 3, divLosses: 1, conf: 'AFC', division: 'West', logo: '⚡' },
-            { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, confWins: 3, confLosses: 4, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🏹' },
-            { id: 'lv', name: 'Raiders', wins: 2, losses: 10, confWins: 1, confLosses: 8, divWins: 0, divLosses: 4, conf: 'AFC', division: 'West', logo: '☠️' },
+            { id: 'den', name: 'Broncos', wins: 10, losses: 2, confWins: 7, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🐴' },
             { id: 'jax', name: 'Jaguars', wins: 8, losses: 4, confWins: 5, confLosses: 3, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐆' }, 
-            { id: 'ind', name: 'Colts', wins: 8, losses: 4, confWins: 6, confLosses: 3, divWins: 2, divLosses: 2, conf: 'AFC', division: 'South', logo: '🐎' },
-            { id: 'hou', name: 'Texans', wins: 7, losses: 5, confWins: 6, confLosses: 2, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐮' },
-            { id: 'ten', name: 'Titans', wins: 1, losses: 10, confWins: 0, confLosses: 7, divWins: 0, divLosses: 3, conf: 'AFC', division: 'South', logo: '⚔️' },
+            { id: 'ind', name: 'Colts', wins: 8, losses: 4, confWins: 6, confLosses: 3, divWins: 2, divLosses: 2, conf: 'AFC', division: 'South', logo: '🐎' },   
+            { id: 'hou', name: 'Texans', wins: 7, losses: 5, confWins: 6, confLosses: 2, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐮' },  
+            { id: 'lac', name: 'Chargers', wins: 8, losses: 4, confWins: 7, confLosses: 2, divWins: 3, divLosses: 1, conf: 'AFC', division: 'West', logo: '⚡' }, 
+            { id: 'buf', name: 'Bills', wins: 8, losses: 4, confWins: 5, confLosses: 3, divWins: 2, divLosses: 1, conf: 'AFC', division: 'East', logo: '🦬' },   
             { id: 'pit', name: 'Steelers', wins: 6, losses: 6, confWins: 5, confLosses: 3, divWins: 2, divLosses: 1, conf: 'AFC', division: 'North', logo: '🔨' }, 
-            { id: 'bal', name: 'Ravens', wins: 6, losses: 6, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐦' },
+            { id: 'bal', name: 'Ravens', wins: 6, losses: 6, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐦' },  
+            { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, confWins: 3, confLosses: 4, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🏹' },   
+            { id: 'mia', name: 'Dolphins', wins: 4, losses: 7, confWins: 2, confLosses: 6, divWins: 1, divLosses: 3, conf: 'AFC', division: 'East', logo: '🐬' },
             { id: 'cin', name: 'Bengals', wins: 4, losses: 8, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐯' },
+            { id: 'nyj', name: 'Jets', wins: 3, losses: 8, confWins: 1, confLosses: 6, divWins: 0, divLosses: 3, conf: 'AFC', division: 'East', logo: '✈️' },
             { id: 'cle', name: 'Browns', wins: 3, losses: 8, confWins: 2, confLosses: 6, divWins: 1, divLosses: 2, conf: 'AFC', division: 'North', logo: '🐶' },
+            { id: 'lv', name: 'Raiders', wins: 2, losses: 10, confWins: 1, confLosses: 8, divWins: 0, divLosses: 4, conf: 'AFC', division: 'West', logo: '☠️' },
+            { id: 'ten', name: 'Titans', wins: 1, losses: 10, confWins: 0, confLosses: 7, divWins: 0, divLosses: 3, conf: 'AFC', division: 'South', logo: '⚔️' },
+            // NFC
             { id: 'phi', name: 'Eagles', wins: 8, losses: 3, conf: 'NFC' },
             { id: 'dal', name: 'Cowboys', wins: 6, losses: 5, conf: 'NFC' },
             { id: 'det', name: 'Lions', wins: 7, losses: 5, conf: 'NFC' },
@@ -114,10 +95,10 @@
             { id: 'gb', name: 'Packers', wins: 8, losses: 3, conf: 'NFC' },
             { id: 'ari', name: 'Cardinals', wins: 3, losses: 8, conf: 'NFC' },
             { id: 'sf', name: '49ers', wins: 8, losses: 4, conf: 'NFC' },
-            { id: 'was', name: 'Commanders', wins: 3, losses: 8, conf: 'NFC' }
+            { id: 'was', name: 'Commanders', wins: 3, losses: 9, conf: 'NFC' } // Lost W13
         ];
 
-        // --- 3. SCHEDULE ---
+        // --- 2. SCHEDULE ---
         const FULL_SCHEDULE = {
             13: [
                 { id: 'w13_kc_dal', home: 'Cowboys', away: 'Chiefs', interest: 'Chiefs', status: 'final', winner: 'home', score: '31-28', isConfGame: false },
@@ -125,10 +106,10 @@
                 { id: 'w13_jax_ten', home: 'Titans', away: 'Jaguars', interest: 'Titans', status: 'final', winner: 'away', score: '3-25', isConfGame: true, isDivGame: true },
                 { id: 'w13_pit_buf', home: 'Steelers', away: 'Bills', interest: 'Bills', status: 'final', winner: 'away', score: '19-24', reason: 'Drop Steelers to 6-6', isConfGame: true },
                 { id: 'w13_lac_lv', home: 'Chargers', away: 'Raiders', interest: 'Raiders', status: 'final', winner: 'home', score: '27-17', reason: 'Chargers hold tiebreaker', isConfGame: true, isDivGame: true },
-                // DEN vs WAS (Set to Scheduled so Auto-Fetch can find it and mark it LIVE)
-                { id: 'w13_den_was', home: 'Commanders', away: 'Broncos', interest: 'Commanders', status: 'scheduled', reason: 'Catching the division leader', isConfGame: false }
+                { id: 'w13_den_was', home: 'Commanders', away: 'Broncos', interest: 'Commanders', status: 'final', winner: 'away', score: '14-21', reason: 'Catching the division leader', isConfGame: false }
             ],
             14: [
+                // Unlocked for Live/Simulated Play
                 { id: 'w14_kc_hou', home: 'Chiefs', away: 'Texans', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN GAME', isConfGame: true },
                 { id: 'w14_buf_cin', home: 'Bills', away: 'Bengals', interest: 'Bengals', status: 'scheduled', reason: 'Bills are ahead of KC', isConfGame: true },
                 { id: 'w14_lac_phi', home: 'Chargers', away: 'Eagles', interest: 'Eagles', status: 'scheduled', reason: 'Chargers are ahead of KC', isConfGame: false },
@@ -185,8 +166,16 @@
             const [localMode, setLocalMode] = useState(!isFirebaseActive);
             const [teams, setTeams] = useState(INITIAL_TEAMS);
             const [scenarios, setScenarios] = useState({});
-            const [liveData, setLiveData] = useState({});
-            const [activeWeek, setActiveWeek] = useState(13);
+            
+            // Auto-Detect Week 14
+            const [activeWeek, setActiveWeek] = useState(() => {
+                const today = new Date();
+                const week14Start = new Date('2025-12-03');
+                const week14End = new Date('2025-12-10');
+                if (today >= week14Start && today <= week14End) return 14;
+                return 13; // Fallback
+            });
+            
             const [shareFeedback, setShareFeedback] = useState('');
             const [lastFetchTime, setLastFetchTime] = useState(null);
 
@@ -225,7 +214,11 @@
                             standData.children.forEach(conf => {
                                 conf.standings.entries.forEach(entry => {
                                     const abbr = entry.team.abbreviation;
-                                    const myId = TEAM_MAP[abbr] || abbr.toLowerCase();
+                                    // Map ESPN abbr to our ID
+                                    let myId = null;
+                                    Object.keys(TEAM_MAP).forEach(k => { if(k === abbr) myId = TEAM_MAP[k]; });
+                                    if(!myId) myId = abbr.toLowerCase();
+
                                     const tIndex = newTeams.findIndex(t => t.id === myId);
                                     if (tIndex > -1) {
                                         const w = entry.stats.find(s => s.name === 'wins')?.value || 0;
@@ -236,37 +229,12 @@
                             });
                             setTeams(newTeams);
                         }
-
-                        // Update Schedule (Live & Final)
-                        const newLiveData = {};
-                        scoreData.events.forEach(evt => {
-                            const comp = evt.competitions[0];
-                            const homeTeam = comp.competitors.find(c => c.homeAway === 'home').team.displayName;
-                            const awayTeam = comp.competitors.find(c => c.homeAway === 'away').team.displayName;
-                            const statusState = evt.status.type.state; 
-                            
-                            Object.values(FULL_SCHEDULE).flat().forEach(localGame => {
-                                if (localGame.status === 'final') return; 
-                                
-                                const match = (homeTeam.includes(localGame.home) || localGame.home.includes(homeTeam)) &&
-                                              (awayTeam.includes(localGame.away) || localGame.away.includes(awayTeam));
-                                
-                                if (match) {
-                                    if (statusState === 'in') {
-                                        newLiveData[localGame.id] = { status: 'live', winner: null };
-                                    } else if (statusState === 'post') {
-                                        const winner = parseInt(comp.competitors.find(c => c.homeAway === 'home').score) > parseInt(comp.competitors.find(c => c.homeAway === 'away').score) ? 'home' : 'away';
-                                        const score = `${comp.competitors.find(c => c.homeAway === 'away').score}-${comp.competitors.find(c => c.homeAway === 'home').score}`;
-                                        newLiveData[localGame.id] = { status: 'final', winner, score };
-                                    }
-                                }
-                            });
-                        });
-                        setLiveData(newLiveData);
+                        
+                        // NOTE: Live game status logic would go here if needed, but we rely on hardcode for robustness now.
                         setLastFetchTime(new Date());
 
                     } catch(e) {
-                        console.log("Data Fetch Failed, using defaults.");
+                        console.log("Data Fetch Failed, using hardcoded defaults.");
                     }
                 };
 
@@ -303,27 +271,21 @@
             const projectedStandings = useMemo(() => {
                 let currentTeams = JSON.parse(JSON.stringify(teams));
 
+                // 1. Process Explicit Games
                 Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                    let status = game.status;
-                    let winnerSide = scenarios[game.id];
-                    
-                    // Override if live data says Final
-                    const live = liveData[game.id];
-                    if (live && live.status === 'final') {
-                        status = 'final';
-                        winnerSide = live.winner;
-                    } else if (status === 'final') {
-                        winnerSide = game.winner;
-                    }
+                    let winnerKey = scenarios[game.id];
+                    // If Final, enforce winner
+                    if (game.status === 'final') winnerKey = game.winner;
 
-                    if (!winnerSide) return;
+                    if (!winnerKey) return;
 
                     const homeTeam = currentTeams.find(t => t.name.includes(game.home) || game.home.includes(t.name));
                     const awayTeam = currentTeams.find(t => t.name.includes(game.away) || game.away.includes(t.name));
                     
-                    if (status !== 'final') { // Only add simulated wins
+                    // Logic: Add wins only if game is 'scheduled' or 'live'.
+                    if (game.status !== 'final') {
                          if (homeTeam && awayTeam) {
-                            if (winnerSide === 'home') { 
+                            if (winnerKey === 'home') { 
                                 homeTeam.wins++; 
                                 if(game.isConfGame) homeTeam.confWins++; 
                                 if(game.isDivGame) homeTeam.divWins++; 
@@ -332,7 +294,7 @@
                                 if(game.isConfGame) homeTeam.confLosses++; 
                                 if(game.isDivGame) homeTeam.divLosses++; 
                             }
-                            if (winnerSide === 'away') {
+                            if (winnerKey === 'away') {
                                 awayTeam.wins++;
                                 if(game.isConfGame) awayTeam.confWins++;
                                 if(game.isDivGame) awayTeam.divWins++;
@@ -345,7 +307,7 @@
                     }
                 });
 
-                // Filler
+                // 2. Filler Logic
                 currentTeams.forEach(team => {
                     if (team.conf !== 'AFC') return; 
                     const totalPlayed = team.wins + team.losses;
@@ -364,14 +326,9 @@
                     if(!team.sov) team.sov = 0;
                 });
 
-                // SOV
+                // 3. SOV (Second Pass)
                 Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                    let winnerKey = null;
-                    const live = liveData[game.id];
-                    if (live && live.status === 'final') winnerKey = live.winner;
-                    else if (game.status === 'final') winnerKey = game.winner;
-                    else winnerKey = scenarios[game.id];
-
+                    let winnerKey = (game.status === 'final') ? game.winner : scenarios[game.id];
                     if (!winnerKey) return;
                     const homeTeam = currentTeams.find(t => t.name.includes(game.home));
                     const awayTeam = currentTeams.find(t => t.name.includes(game.away));
@@ -381,7 +338,7 @@
                     }
                 });
 
-                // Sorting
+                // 4. Sort
                 const divisions = { 'East': [], 'West': [], 'North': [], 'South': [] };
                 currentTeams.forEach(t => { if(t.conf === 'AFC' && divisions[t.division]) divisions[t.division].push(t); });
 
@@ -393,13 +350,9 @@
                         const isAAway = game.away.includes(a.name) || a.name.includes(game.away);
                         const isBAway = game.away.includes(b.name) || b.name.includes(game.away);
                         if ((isAHome && isBAway) || (isBHome && isAAway)) {
-                            let winner = null;
-                            const live = liveData[game.id];
-                            if (live && live.status === 'final') winner = live.winner;
-                            else if (game.status === 'final') winner = game.winner;
-                            else winner = scenarios[game.id];
-                            if (winner) {
-                                if ((isAHome && winner === 'home') || (isAAway && winner === 'away')) aWins++;
+                            let w = (game.status === 'final') ? game.winner : scenarios[game.id];
+                            if (w) {
+                                if ((isAHome && w === 'home') || (isAAway && w === 'away')) aWins++;
                                 else bWins++;
                             }
                         }
@@ -432,7 +385,7 @@
                 winners.sort((a,b) => sortTeams(a,b,'wildcard'));
                 wildcards.sort((a,b) => sortTeams(a,b,'wildcard'));
                 return [...winners, ...wildcards];
-            }, [scenarios, teams, liveData]);
+            }, [scenarios, teams]);
 
             const chiefsRank = projectedStandings.findIndex(t => t.name === 'Chiefs') + 1;
             const inPlayoffs = chiefsRank <= 7 && chiefsRank > 0;
@@ -440,8 +393,7 @@
 
             const handleToggle = (gameId) => {
                 const game = Object.values(FULL_SCHEDULE).flat().find(g => g.id === gameId);
-                const live = liveData[gameId];
-                if ((game && game.status === 'final') || (live && live.status === 'final')) return;
+                if (game && game.status === 'final') return;
                 setScenarios(prev => ({...prev, [gameId]: prev[gameId] === 'home' ? 'away' : 'home'}));
             };
 
@@ -507,9 +459,8 @@
                         <div className="space-y-3">
                             {FULL_SCHEDULE[activeWeek]?.map((game) => {
                                 const isHomeSelected = scenarios[game.id] === 'home';
-                                const live = liveData[game.id];
-                                const isFinal = game.status === 'final' || (live && live.status === 'final');
-                                const isLive = live && live.status === 'live';
+                                const isFinal = game.status === 'final';
+                                const isLive = game.status === 'live';
                                 
                                 return (
                                     <div key={game.id} className={`bg-white rounded-lg p-4 shadow-sm relative overflow-hidden transition-all duration-300 ${isLive ? 'live-border' : 'border border-gray-200'}`}>
@@ -519,15 +470,15 @@
                                         </div>
 
                                         <div className="flex justify-between items-center mb-3 px-1">
-                                            <div className="text-center w-1/3"><div className={`text-base font-bold ${isFinal ? (game.winner === 'home' || live?.winner === 'home' ? 'text-gray-900' : 'text-gray-400') : (isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.home}</div></div>
+                                            <div className="text-center w-1/3"><div className={`text-base font-bold ${isFinal ? (game.winner === 'home' ? 'text-gray-900' : 'text-gray-400') : (isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.home}</div></div>
                                             <div className="text-xs text-gray-300 font-bold">VS</div>
-                                            <div className="text-center w-1/3"><div className={`text-base font-bold ${isFinal ? (game.winner === 'away' || live?.winner === 'away' ? 'text-gray-900' : 'text-gray-400') : (!isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.away}</div></div>
+                                            <div className="text-center w-1/3"><div className={`text-base font-bold ${isFinal ? (game.winner === 'away' ? 'text-gray-900' : 'text-gray-400') : (!isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.away}</div></div>
                                         </div>
-                                        
+
                                         {isFinal ? (
                                             <div className="bg-gray-100 rounded-lg p-3 mb-3 flex flex-col items-center justify-center border border-gray-200">
                                                 <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1">FINAL SCORE</span>
-                                                <span className="text-xl font-black text-gray-800">{live ? live.score : game.score}</span>
+                                                <span className="text-xl font-black text-gray-800">{game.score}</span>
                                             </div>
                                         ) : (
                                             <div className="flex items-center justify-between bg-gray-100 rounded-lg p-1 mb-3">
@@ -535,7 +486,11 @@
                                                 <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${!isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>{game.away} Wins</button>
                                             </div>
                                         )}
-                                        <div className="flex items-start space-x-2 bg-blue-50 p-2 rounded text-blue-800"><Icon name="info" className="w-4 h-4 mt-0.5 flex-shrink-0" /><div className="text-xs leading-relaxed"><span className="font-bold">Root for {game.interest}: </span>{game.reason}</div></div>
+
+                                        <div className="flex items-start space-x-2 bg-blue-50 p-2 rounded text-blue-800">
+                                            <Icon name="info" className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                            <div className="text-xs leading-relaxed"><span className="font-bold">Root for {game.interest}: </span>{game.reason}</div>
+                                        </div>
                                     </div>
                                 );
                             })}
