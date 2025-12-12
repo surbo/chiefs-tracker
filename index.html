@@ -136,38 +136,39 @@
 
     // The Games (Weeks 15-18)
     // Tag: 'KC' means it directly involves Chiefs. 'RIVAL' means direct WC competition.
+    // 'note' field added for Rooting Guide
     const schedule = [
         // WEEK 15
-        { id: "w15-kc-lac",  week: 15, away: "LAC", home: "KC",  tag: "KC", importance: 10 },
-        { id: "w15-ind-sea", week: 15, away: "IND", home: "SEA", tag: "RIVAL", importance: 9 },
-        { id: "w15-hou-ari", week: 15, away: "HOU", home: "ARI", tag: "RIVAL", importance: 9 },
-        { id: "w15-bal-cin", week: 15, away: "BAL", home: "CIN", tag: "RIVAL", importance: 7 },
-        { id: "w15-mia-pit", week: 15, away: "MIA", home: "PIT", tag: "RIVAL", importance: 8 }, 
-        { id: "w15-buf-ne",  week: 15, away: "BUF", home: "NE",  tag: "SEED", importance: 5 },
+        { id: "w15-kc-lac",  week: 15, away: "LAC", home: "KC",  tag: "KC", importance: 10, note: "Root for Chiefs (Must Win)" },
+        { id: "w15-ind-sea", week: 15, away: "IND", home: "SEA", tag: "RIVAL", importance: 9, note: "Root for Seahawks" },
+        { id: "w15-hou-ari", week: 15, away: "HOU", home: "ARI", tag: "RIVAL", importance: 9, note: "Root for Cardinals" },
+        { id: "w15-bal-cin", week: 15, away: "BAL", home: "CIN", tag: "RIVAL", importance: 7, note: "Root for Bengals" },
+        { id: "w15-mia-pit", week: 15, away: "MIA", home: "PIT", tag: "RIVAL", importance: 8, note: "Root for Steelers (Beat WC threat)" }, 
+        { id: "w15-buf-ne",  week: 15, away: "BUF", home: "NE",  tag: "SEED", importance: 5, note: "Root for Patriots (Catch Bills?)" },
 
         // WEEK 16
-        { id: "w16-kc-ten",  week: 16, away: "KC",  home: "TEN", tag: "KC", importance: 10 },
-        { id: "w16-hou-lv",  week: 16, away: "LV",  home: "HOU", tag: "RIVAL", importance: 8 },
-        { id: "w16-ind-sf",  week: 16, away: "SF",  home: "IND", tag: "RIVAL", importance: 8 },
-        { id: "w16-lac-dal", week: 16, away: "LAC", home: "DAL", tag: "RIVAL", importance: 7 }, // Charger collapse path
-        { id: "w16-pit-det", week: 16, away: "PIT", home: "DET", tag: "RIVAL", importance: 6 },
-        { id: "w16-mia-cin", week: 16, away: "CIN", home: "MIA", tag: "RIVAL", importance: 5 },
-        { id: "w16-bal-ne",  week: 16, away: "NE",  home: "BAL", tag: "RIVAL", importance: 6 },
+        { id: "w16-kc-ten",  week: 16, away: "KC",  home: "TEN", tag: "KC", importance: 10, note: "Root for Chiefs" },
+        { id: "w16-hou-lv",  week: 16, away: "LV",  home: "HOU", tag: "RIVAL", importance: 8, note: "Root for Raiders" },
+        { id: "w16-ind-sf",  week: 16, away: "SF",  home: "IND", tag: "RIVAL", importance: 8, note: "Root for 49ers" },
+        { id: "w16-lac-dal", week: 16, away: "LAC", home: "DAL", tag: "RIVAL", importance: 7, note: "Root for Cowboys" }, 
+        { id: "w16-pit-det", week: 16, away: "PIT", home: "DET", tag: "RIVAL", importance: 6, note: "Root for Lions" },
+        { id: "w16-mia-cin", week: 16, away: "CIN", home: "MIA", tag: "RIVAL", importance: 5, note: "Root for Bengals" },
+        { id: "w16-bal-ne",  week: 16, away: "NE",  home: "BAL", tag: "RIVAL", importance: 6, note: "Root for Patriots" },
 
         // WEEK 17
-        { id: "w17-kc-den",  week: 17, away: "DEN", home: "KC",  tag: "KC", importance: 10 },
-        { id: "w17-hou-lac", week: 17, away: "HOU", home: "LAC", tag: "RIVAL", importance: 10 }, // HUGE GAME
-        { id: "w17-ind-jax", week: 17, away: "JAX", home: "IND", tag: "RIVAL", importance: 8 },
-        { id: "w17-pit-cle", week: 17, away: "PIT", home: "CLE", tag: "RIVAL", importance: 6 },
-        { id: "w17-mia-tb",  week: 17, away: "TB",  home: "MIA", tag: "RIVAL", importance: 5 },
-        { id: "w17-bal-gb",  week: 17, away: "BAL", home: "GB",  tag: "RIVAL", importance: 5 },
+        { id: "w17-kc-den",  week: 17, away: "DEN", home: "KC",  tag: "KC", importance: 10, note: "Root for Chiefs" },
+        { id: "w17-hou-lac", week: 17, away: "HOU", home: "LAC", tag: "RIVAL", importance: 10, note: "Root for Chargers (KC loses tiebreak to HOU)" }, // Huge note here
+        { id: "w17-ind-jax", week: 17, away: "JAX", home: "IND", tag: "RIVAL", importance: 8, note: "Root for Jaguars" },
+        { id: "w17-pit-cle", week: 17, away: "PIT", home: "CLE", tag: "RIVAL", importance: 6, note: "Root for Browns" },
+        { id: "w17-mia-tb",  week: 17, away: "TB",  home: "MIA", tag: "RIVAL", importance: 5, note: "Root for Bucs" },
+        { id: "w17-bal-gb",  week: 17, away: "BAL", home: "GB",  tag: "RIVAL", importance: 5, note: "Root for Packers" },
 
         // WEEK 18
-        { id: "w18-kc-lv",   week: 18, away: "KC",  home: "LV",  tag: "KC", importance: 10 },
-        { id: "w18-hou-ind", week: 18, away: "IND", home: "HOU", tag: "RIVAL", importance: 10 }, // HUGE GAME
-        { id: "w18-lac-den", week: 18, away: "LAC", home: "DEN", tag: "RIVAL", importance: 8 },
-        { id: "w18-bal-pit", week: 18, away: "BAL", home: "PIT", tag: "RIVAL", importance: 9 }, // HUGE GAME
-        { id: "w18-mia-ne",  week: 18, away: "MIA", home: "NE",  tag: "RIVAL", importance: 6 },
+        { id: "w18-kc-lv",   week: 18, away: "KC",  home: "LV",  tag: "KC", importance: 10, note: "Root for Chiefs" },
+        { id: "w18-hou-ind", week: 18, away: "IND", home: "HOU", tag: "RIVAL", importance: 10, note: "Root for Colts (KC owns tiebreak over IND)" }, // Strategic note
+        { id: "w18-lac-den", week: 18, away: "LAC", home: "DEN", tag: "RIVAL", importance: 8, note: "Root for Broncos" },
+        { id: "w18-bal-pit", week: 18, away: "BAL", home: "PIT", tag: "RIVAL", importance: 9, note: "Root for Steelers" }, 
+        { id: "w18-mia-ne",  week: 18, away: "MIA", home: "NE",  tag: "RIVAL", importance: 6, note: "Root for Patriots" },
     ];
 
     // Known Head-to-Head Tiebreakers (1 = TeamA wins, -1 = TeamB wins)
@@ -387,14 +388,20 @@
                 if (isKC) badge = `<span class="bg-red-100 text-red-700 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">Must Win</span>`;
                 else if (game.tag === 'RIVAL') badge = `<span class="bg-blue-50 text-blue-700 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">Key Game</span>`;
 
+                // Rooting Note
+                let noteHtml = "";
+                if (game.note) {
+                    noteHtml = `<div class="text-[10px] text-gray-500 italic flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded"><i class="fas fa-bullhorn text-gray-400"></i>${game.note}</div>`;
+                }
+
                 // HTML structure
                 el.innerHTML = `
                     <div class="flex justify-between items-start">
                         <span class="text-[10px] text-gray-400 font-mono">${game.away} @ ${game.home}</span>
                         ${badge}
                     </div>
-                    
-                    <div class="flex gap-1 w-full">
+                    ${noteHtml}
+                    <div class="flex gap-1 w-full mt-auto pt-1">
                         <button onclick="pick('${game.id}', 'away')" 
                             class="flex-1 py-1.5 rounded text-xs font-bold transition-colors border ${getBtnClass(game.id, 'away', game.away)}">
                             ${teams[game.away]?.name || game.away}
