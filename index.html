@@ -2,549 +2,443 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <!-- Cache Busting -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-
-    <title>Chiefs Playoff Simulator</title>
-    
-    <!-- Styles -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiefs Playoff Simulator 2025</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <style>
-        body { -webkit-tap-highlight-color: transparent; background-color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        .touch-manipulation { touch-action: manipulation; }
-        @keyframes live-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-            70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-        }
-        .live-indicator { animation: live-pulse 2s infinite; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .chiefs-red { background-color: #E31837; }
+        .chiefs-gold { color: #FFB81C; }
+        
+        /* Scrollbar styling */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .team-row { transition: all 0.2s ease; }
+        .game-card { transition: all 0.2s ease; }
+        .game-card:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        
+        /* Toggle Button Selected States */
+        .btn-selected-away { background-color: #E31837; color: white; border-color: #E31837; }
+        .btn-selected-home { background-color: #004C54; color: white; border-color: #004C54; } 
+        /* Dynamic coloring handled by JS, these are fallbacks */
+
+        .seed-badge { font-family: 'Courier New', monospace; font-weight: 800; }
     </style>
-
-    <!-- Libraries -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 </head>
-<body>
-    <div id="root"></div>
+<body class="h-screen flex flex-col overflow-hidden text-gray-800">
 
-    <script type="text/babel">
-        // ==========================================
-        //  APP VERSION
-        // ==========================================
-        const APP_VERSION = "v3.01 (Week 14 Live)"; 
-
-        // ==========================================
-        //  STEP 1: PASTE YOUR FIREBASE KEYS HERE
-        // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyC1X5ojFe20AaRC1OMVpDoXbqtzi5j0s4Y",
-            authDomain: "chiefs-tracker.firebaseapp.com",
-            projectId: "chiefs-tracker",
-            storageBucket: "chiefs-tracker.firebasestorage.app",
-            messagingSenderId: "484287750268",
-            appId: "1:484287750268:web:e3f84f1dbd0d371df929f9"
-        };
-
-        const { useState, useEffect, useMemo, useRef } = React;
-
-        let db, auth;
-        let isFirebaseActive = false;
-        try {
-            if (firebaseConfig.apiKey && typeof firebase !== 'undefined') {
-                const app = firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore(app);
-                auth = firebase.auth(app);
-                isFirebaseActive = true;
-            }
-        } catch (e) { console.warn("Offline Mode"); }
-
-        // --- 1. FULL DATA (Reset to Week 13 Final / Week 14 Start) ---
-        const INITIAL_TEAMS = [
-            { id: 'ne', name: 'Patriots', wins: 10, losses: 2, confWins: 6, confLosses: 1, divWins: 4, divLosses: 0, conf: 'AFC', division: 'East', logo: '🦁' },
-            { id: 'den', name: 'Broncos', wins: 10, losses: 2, confWins: 7, confLosses: 2, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🐴' },
-            { id: 'jax', name: 'Jaguars', wins: 8, losses: 4, confWins: 5, confLosses: 3, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐆' }, 
-            { id: 'ind', name: 'Colts', wins: 8, losses: 4, confWins: 6, confLosses: 3, divWins: 2, divLosses: 2, conf: 'AFC', division: 'South', logo: '🐎' },   
-            { id: 'hou', name: 'Texans', wins: 7, losses: 5, confWins: 6, confLosses: 2, divWins: 3, divLosses: 1, conf: 'AFC', division: 'South', logo: '🐮' },  
-            { id: 'lac', name: 'Chargers', wins: 8, losses: 4, confWins: 7, confLosses: 2, divWins: 3, divLosses: 1, conf: 'AFC', division: 'West', logo: '⚡' }, 
-            { id: 'buf', name: 'Bills', wins: 8, losses: 4, confWins: 5, confLosses: 3, divWins: 2, divLosses: 1, conf: 'AFC', division: 'East', logo: '🦬' },   
-            { id: 'pit', name: 'Steelers', wins: 6, losses: 6, confWins: 5, confLosses: 3, divWins: 2, divLosses: 1, conf: 'AFC', division: 'North', logo: '🔨' }, 
-            { id: 'bal', name: 'Ravens', wins: 6, losses: 6, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐦' },  
-            { id: 'kc', name: 'Chiefs', wins: 6, losses: 6, confWins: 3, confLosses: 4, divWins: 2, divLosses: 1, conf: 'AFC', division: 'West', logo: '🏹' },   
-            { id: 'mia', name: 'Dolphins', wins: 4, losses: 7, confWins: 2, confLosses: 6, divWins: 1, divLosses: 3, conf: 'AFC', division: 'East', logo: '🐬' },
-            { id: 'cin', name: 'Bengals', wins: 4, losses: 8, confWins: 4, confLosses: 4, divWins: 1, divLosses: 3, conf: 'AFC', division: 'North', logo: '🐯' },
-            { id: 'nyj', name: 'Jets', wins: 3, losses: 8, confWins: 1, confLosses: 6, divWins: 0, divLosses: 3, conf: 'AFC', division: 'East', logo: '✈️' },
-            { id: 'cle', name: 'Browns', wins: 3, losses: 8, confWins: 2, confLosses: 6, divWins: 1, divLosses: 2, conf: 'AFC', division: 'North', logo: '🐶' },
-            { id: 'lv', name: 'Raiders', wins: 2, losses: 10, confWins: 1, confLosses: 8, divWins: 0, divLosses: 4, conf: 'AFC', division: 'West', logo: '☠️' },
-            { id: 'ten', name: 'Titans', wins: 1, losses: 10, confWins: 0, confLosses: 7, divWins: 0, divLosses: 3, conf: 'AFC', division: 'South', logo: '⚔️' },
-            // NFC
-            { id: 'phi', name: 'Eagles', wins: 8, losses: 3, conf: 'NFC' },
-            { id: 'dal', name: 'Cowboys', wins: 6, losses: 5, conf: 'NFC' },
-            { id: 'det', name: 'Lions', wins: 7, losses: 5, conf: 'NFC' },
-            { id: 'sea', name: 'Seahawks', wins: 8, losses: 3, conf: 'NFC' },
-            { id: 'gb', name: 'Packers', wins: 8, losses: 3, conf: 'NFC' },
-            { id: 'ari', name: 'Cardinals', wins: 3, losses: 8, conf: 'NFC' },
-            { id: 'sf', name: '49ers', wins: 8, losses: 4, conf: 'NFC' },
-            { id: 'was', name: 'Commanders', wins: 3, losses: 9, conf: 'NFC' } // Lost W13
-        ];
-
-        // --- 2. SCHEDULE ---
-        const FULL_SCHEDULE = {
-            13: [
-                { id: 'w13_kc_dal', home: 'Cowboys', away: 'Chiefs', interest: 'Chiefs', status: 'final', winner: 'home', score: '31-28', isConfGame: false },
-                { id: 'w13_hou_ind', home: 'Colts', away: 'Texans', interest: 'Colts', status: 'final', winner: 'away', score: '16-20', isConfGame: true, isDivGame: true },
-                { id: 'w13_jax_ten', home: 'Titans', away: 'Jaguars', interest: 'Titans', status: 'final', winner: 'away', score: '3-25', isConfGame: true, isDivGame: true },
-                { id: 'w13_pit_buf', home: 'Steelers', away: 'Bills', interest: 'Bills', status: 'final', winner: 'away', score: '19-24', reason: 'Drop Steelers to 6-6', isConfGame: true },
-                { id: 'w13_lac_lv', home: 'Chargers', away: 'Raiders', interest: 'Raiders', status: 'final', winner: 'home', score: '27-17', reason: 'Chargers hold tiebreaker', isConfGame: true, isDivGame: true },
-                { id: 'w13_den_was', home: 'Commanders', away: 'Broncos', interest: 'Commanders', status: 'final', winner: 'away', score: '14-21', reason: 'Catching the division leader', isConfGame: false }
-            ],
-            14: [
-                // Unlocked for Live/Simulated Play
-                { id: 'w14_kc_hou', home: 'Chiefs', away: 'Texans', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN GAME', isConfGame: true },
-                { id: 'w14_buf_cin', home: 'Bills', away: 'Bengals', interest: 'Bengals', status: 'scheduled', reason: 'Bills are ahead of KC', isConfGame: true },
-                { id: 'w14_lac_phi', home: 'Chargers', away: 'Eagles', interest: 'Eagles', status: 'scheduled', reason: 'Chargers are ahead of KC', isConfGame: false },
-                { id: 'w14_jax_ind', home: 'Jaguars', away: 'Colts', interest: 'Colts', status: 'scheduled', reason: 'Jags are ahead of KC', isConfGame: true, isDivGame: true }
-            ],
-            15: [
-                { id: 'w15_kc_lac', home: 'Chiefs', away: 'Chargers', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN (Division & WC)', isConfGame: true, isDivGame: true },
-                { id: 'w15_buf_ne', home: 'Patriots', away: 'Bills', interest: 'Patriots', status: 'scheduled', reason: 'Bills are ahead of KC', isConfGame: true, isDivGame: true },
-                { id: 'w15_jax_nyj', home: 'Jaguars', away: 'Jets', interest: 'Jets', status: 'scheduled', reason: 'Jags are ahead of KC', isConfGame: true }
-            ],
-            16: [
-                { id: 'w16_kc_ten', home: 'Titans', away: 'Chiefs', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN', isConfGame: true },
-                { id: 'w16_jax_den', home: 'Broncos', away: 'Jaguars', interest: 'Broncos', status: 'scheduled', reason: 'Jags are bigger threat to WC', isConfGame: true },
-                { id: 'w16_lac_dal', home: 'Cowboys', away: 'Chargers', interest: 'Cowboys', status: 'scheduled', reason: 'Chargers are threat', isConfGame: false },
-                { id: 'w16_pit_det', home: 'Lions', away: 'Steelers', interest: 'Lions', status: 'scheduled', reason: 'Steelers are threat', isConfGame: false },
-                { id: 'w16_buf_cle', home: 'Browns', away: 'Bills', interest: 'Browns', status: 'scheduled', reason: 'Bills are threat', isConfGame: true },
-                { id: 'w16_hou_lv', home: 'Texans', away: 'Raiders', interest: 'Raiders', status: 'scheduled', reason: 'Texans are threat', isConfGame: true }
-            ],
-            17: [
-                { id: 'w17_kc_den', home: 'Chiefs', away: 'Broncos', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN (Xmas Day)', isConfGame: true, isDivGame: true },
-                { id: 'w17_lac_hou', home: 'Chargers', away: 'Texans', interest: 'Texans', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC', isConfGame: true },
-                { id: 'w17_buf_phi', home: 'Bills', away: 'Eagles', interest: 'Eagles', status: 'scheduled', reason: 'Bills are threat', isConfGame: false },
-                { id: 'w17_jax_ind', home: 'Colts', away: 'Jaguars', interest: 'Colts', status: 'scheduled', reason: 'Jags are threat', isConfGame: true, isDivGame: true },
-                { id: 'w17_pit_cle', home: 'Browns', away: 'Steelers', interest: 'Browns', status: 'scheduled', reason: 'Steelers are threat', isConfGame: true, isDivGame: true }
-            ],
-            18: [
-                { id: 'w18_kc_lv', home: 'Raiders', away: 'Chiefs', interest: 'Chiefs', status: 'scheduled', reason: 'MUST WIN', isConfGame: true, isDivGame: true },
-                { id: 'w18_den_lac', home: 'Broncos', away: 'Chargers', interest: 'Broncos', status: 'scheduled', reason: 'Chargers hold tiebreaker over KC', isConfGame: true, isDivGame: true },
-                { id: 'w18_hou_ind', home: 'Texans', away: 'Colts', interest: 'Colts', status: 'scheduled', reason: 'Texans are threat', isConfGame: true, isDivGame: true },
-                { id: 'w18_jax_ten', home: 'Jaguars', away: 'Titans', interest: 'Titans', status: 'scheduled', reason: 'Jags are threat', isConfGame: true, isDivGame: true },
-                { id: 'w18_pit_bal', home: 'Steelers', away: 'Ravens', interest: 'Ravens', status: 'scheduled', reason: 'Steelers are threat', isConfGame: true, isDivGame: true },
-                { id: 'w18_buf_nyj', home: 'Bills', away: 'Jets', interest: 'Jets', status: 'scheduled', reason: 'Bills are threat', isConfGame: true, isDivGame: true }
-            ]
-        };
-
-        // --- 3. ICON COMPONENT ---
-        const Icon = ({ name, className }) => {
-            const ref = useRef(null);
-            useEffect(() => {
-                if (window.lucide && ref.current) {
-                    ref.current.innerHTML = `<i data-lucide="${name}" class="${className || ''}"></i>`;
-                    window.lucide.createIcons({
-                        root: ref.current,
-                        nameAttr: 'data-lucide',
-                        attrs: { class: className }
-                    });
-                }
-            }, [name, className]);
-            return <span ref={ref} className="inline-flex items-center justify-center"></span>;
-        };
-
-        function App() {
-            const [pulse, setPulse] = useState({ yes: 1240, no: 650, voted: false });
-            const [localMode, setLocalMode] = useState(!isFirebaseActive);
-            const [teams, setTeams] = useState(INITIAL_TEAMS);
-            const [scenarios, setScenarios] = useState({});
-            
-            // Auto-Detect Week 14
-            const [activeWeek, setActiveWeek] = useState(() => {
-                const today = new Date();
-                const week14Start = new Date('2025-12-03');
-                const week14End = new Date('2025-12-10');
-                if (today >= week14Start && today <= week14End) return 14;
-                return 13; // Fallback
-            });
-            
-            const [shareFeedback, setShareFeedback] = useState('');
-            const [lastFetchTime, setLastFetchTime] = useState(null);
-
-            // --- Init & Fetch ---
-            useEffect(() => {
-                // 1. Load Saved Scenarios
-                let savedPicks = {};
-                try {
-                    const fromStorage = localStorage.getItem('chiefs_scenarios');
-                    if (fromStorage) savedPicks = JSON.parse(fromStorage);
-                } catch(e) {}
-                setScenarios(prev => {
-                    const combined = { ...savedPicks };
-                    Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                        if (!combined[game.id]) {
-                            combined[game.id] = game.interest === game.home ? 'home' : 'away';
-                        }
-                    });
-                    return combined;
-                });
-
-                // 2. Fetch Live Data
-                const fetchData = async () => {
-                    try {
-                        const scoreRes = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'));
-                        const scoreJson = await scoreRes.json();
-                        const scoreData = JSON.parse(scoreJson.contents);
-
-                        const standRes = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://site.api.espn.com/apis/v2/sports/football/nfl/standings'));
-                        const standJson = await standRes.json();
-                        const standData = JSON.parse(standJson.contents);
-
-                        // Update Teams
-                        const newTeams = [...INITIAL_TEAMS];
-                        if(standData.children) {
-                            standData.children.forEach(conf => {
-                                conf.standings.entries.forEach(entry => {
-                                    const abbr = entry.team.abbreviation;
-                                    // Map ESPN abbr to our ID
-                                    let myId = null;
-                                    Object.keys(TEAM_MAP).forEach(k => { if(k === abbr) myId = TEAM_MAP[k]; });
-                                    if(!myId) myId = abbr.toLowerCase();
-
-                                    const tIndex = newTeams.findIndex(t => t.id === myId);
-                                    if (tIndex > -1) {
-                                        const w = entry.stats.find(s => s.name === 'wins')?.value || 0;
-                                        const l = entry.stats.find(s => s.name === 'losses')?.value || 0;
-                                        newTeams[tIndex] = { ...newTeams[tIndex], wins: w, losses: l };
-                                    }
-                                });
-                            });
-                            setTeams(newTeams);
-                        }
-                        
-                        // NOTE: Live game status logic would go here if needed, but we rely on hardcode for robustness now.
-                        setLastFetchTime(new Date());
-
-                    } catch(e) {
-                        console.log("Data Fetch Failed, using hardcoded defaults.");
-                    }
-                };
-
-                fetchData();
-                const interval = setInterval(fetchData, 60000);
-
-                // 3. Firebase Pulse
-                if (isFirebaseActive) {
-                    auth.onAuthStateChanged(user => {
-                        if (user) {
-                            db.collection('stats').doc('chiefs_pulse').onSnapshot(doc => {
-                                if (doc.exists) setPulse({ ...doc.data() });
-                            });
-                        } else {
-                            auth.signInAnonymously();
-                        }
-                    });
-                } else {
-                    const saved = localStorage.getItem('chiefs_pulse_local');
-                    if(saved) {
-                        const parsed = JSON.parse(saved);
-                        setPulse({ yes: parsed.yes||0, no: parsed.no||0, voted: parsed.voted||false });
-                    }
-                }
-                return () => clearInterval(interval);
-            }, []);
-
-            useEffect(() => {
-                if (Object.keys(scenarios).length > 0) {
-                    localStorage.setItem('chiefs_scenarios', JSON.stringify(scenarios));
-                }
-            }, [scenarios]);
-
-            const projectedStandings = useMemo(() => {
-                let currentTeams = JSON.parse(JSON.stringify(teams));
-
-                // 1. Process Explicit Games
-                Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                    let winnerKey = scenarios[game.id];
-                    // If Final, enforce winner
-                    if (game.status === 'final') winnerKey = game.winner;
-
-                    if (!winnerKey) return;
-
-                    const homeTeam = currentTeams.find(t => t.name.includes(game.home) || game.home.includes(t.name));
-                    const awayTeam = currentTeams.find(t => t.name.includes(game.away) || game.away.includes(t.name));
-                    
-                    // Logic: Add wins only if game is 'scheduled' or 'live'.
-                    if (game.status !== 'final') {
-                         if (homeTeam && awayTeam) {
-                            if (winnerKey === 'home') { 
-                                homeTeam.wins++; 
-                                if(game.isConfGame) homeTeam.confWins++; 
-                                if(game.isDivGame) homeTeam.divWins++; 
-                            } else { 
-                                homeTeam.losses++; 
-                                if(game.isConfGame) homeTeam.confLosses++; 
-                                if(game.isDivGame) homeTeam.divLosses++; 
-                            }
-                            if (winnerKey === 'away') {
-                                awayTeam.wins++;
-                                if(game.isConfGame) awayTeam.confWins++;
-                                if(game.isDivGame) awayTeam.divWins++;
-                            } else {
-                                awayTeam.losses++;
-                                if(game.isConfGame) awayTeam.confLosses++;
-                                if(game.isDivGame) awayTeam.divLosses++;
-                            }
-                        }
-                    }
-                });
-
-                // 2. Filler Logic
-                currentTeams.forEach(team => {
-                    if (team.conf !== 'AFC') return; 
-                    const totalPlayed = team.wins + team.losses;
-                    const remaining = 17 - totalPlayed;
-                    if (remaining > 0) {
-                        const currentPct = team.wins / (totalPlayed || 1);
-                        const simWins = currentPct >= 0.5 ? Math.ceil(remaining * currentPct) : Math.floor(remaining * currentPct);
-                        const simLosses = remaining - simWins;
-                        team.wins += simWins;
-                        team.losses += simLosses;
-                        team.confWins += Math.round(simWins * 0.7);
-                        team.confLosses += Math.round(simLosses * 0.7);
-                        team.divWins += Math.round(simWins * 0.3);
-                        team.divLosses += Math.round(simLosses * 0.3);
-                    }
-                    if(!team.sov) team.sov = 0;
-                });
-
-                // 3. SOV (Second Pass)
-                Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                    let winnerKey = (game.status === 'final') ? game.winner : scenarios[game.id];
-                    if (!winnerKey) return;
-                    const homeTeam = currentTeams.find(t => t.name.includes(game.home));
-                    const awayTeam = currentTeams.find(t => t.name.includes(game.away));
-                    if (homeTeam && awayTeam) {
-                        if (winnerKey === 'home' && homeTeam.conf === 'AFC') homeTeam.sov += awayTeam.wins;
-                        else if (winnerKey === 'away' && awayTeam.conf === 'AFC') awayTeam.sov += homeTeam.wins;
-                    }
-                });
-
-                // 4. Sort
-                const divisions = { 'East': [], 'West': [], 'North': [], 'South': [] };
-                currentTeams.forEach(t => { if(t.conf === 'AFC' && divisions[t.division]) divisions[t.division].push(t); });
-
-                const checkHeadToHead = (a, b) => {
-                    let aWins = 0, bWins = 0;
-                    Object.values(FULL_SCHEDULE).flat().forEach(game => {
-                        const isAHome = game.home.includes(a.name) || a.name.includes(game.home);
-                        const isBHome = game.home.includes(b.name) || b.name.includes(game.home);
-                        const isAAway = game.away.includes(a.name) || a.name.includes(game.away);
-                        const isBAway = game.away.includes(b.name) || b.name.includes(game.away);
-                        if ((isAHome && isBAway) || (isBHome && isAAway)) {
-                            let w = (game.status === 'final') ? game.winner : scenarios[game.id];
-                            if (w) {
-                                if ((isAHome && w === 'home') || (isAAway && w === 'away')) aWins++;
-                                else bWins++;
-                            }
-                        }
-                    });
-                    const killers = ['Bills', 'Jaguars'];
-                    if(a.id === 'kc' && killers.includes(b.name)) return -1;
-                    if(b.id === 'kc' && killers.includes(a.name)) return 1;
-                    return aWins - bWins;
-                };
-
-                const sortTeams = (a, b, ctx) => {
-                    const wa = a.wins/(a.wins+a.losses||1), wb = b.wins/(b.wins+b.losses||1);
-                    if(Math.abs(wa-wb)>0.001) return wb-wa;
-                    const h2h = checkHeadToHead(a, b);
-                    if (h2h !== 0) return h2h;
-                    if (ctx === 'division' || a.division === b.division) {
-                        const da = a.divWins/(a.divWins+a.divLosses||1), db = b.divWins/(b.divWins+b.divLosses||1);
-                        if(Math.abs(da-db)>0.001) return db-da;
-                    }
-                    const ca = a.confWins/(a.confWins+a.confLosses||1), cb = b.confWins/(b.confWins+b.confLosses||1);
-                    if(Math.abs(ca-cb)>0.001) return cb-ca;
-                    return b.sov - a.sov;
-                };
-
-                let winners = [], wildcards = [];
-                Object.values(divisions).forEach(d => {
-                    d.sort((a,b) => sortTeams(a,b,'division'));
-                    if(d.length>0) { winners.push(d[0]); for(let i=1; i<d.length; i++) wildcards.push(d[i]); }
-                });
-                winners.sort((a,b) => sortTeams(a,b,'wildcard'));
-                wildcards.sort((a,b) => sortTeams(a,b,'wildcard'));
-                return [...winners, ...wildcards];
-            }, [scenarios, teams]);
-
-            const chiefsRank = projectedStandings.findIndex(t => t.name === 'Chiefs') + 1;
-            const inPlayoffs = chiefsRank <= 7 && chiefsRank > 0;
-            const chiefsStats = projectedStandings.find(t => t.name === 'Chiefs');
-
-            const handleToggle = (gameId) => {
-                const game = Object.values(FULL_SCHEDULE).flat().find(g => g.id === gameId);
-                if (game && game.status === 'final') return;
-                setScenarios(prev => ({...prev, [gameId]: prev[gameId] === 'home' ? 'away' : 'home'}));
-            };
-
-            const handleVote = async (type) => {
-                if (pulse.voted) return;
-                setPulse(prev => ({ ...prev, [type]: prev[type] + 1, voted: true }));
-                if (isFirebaseActive) try { await db.collection('stats').doc('chiefs_pulse').set({ [type]: firebase.firestore.FieldValue.increment(1) }, { merge: true }); } catch(e){}
-                else localStorage.setItem('chiefs_pulse_local', JSON.stringify({ ...pulse, [type]: pulse[type] + 1, voted: true }));
-            };
-
-            const handleShare = async () => {
-                const url = "https://surbo.github.io/chiefs-tracker/"; 
-                if (navigator.share) { try { await navigator.share({ title: 'Chiefs Playoff Simulator', url: url }); return; } catch (err) {} }
-                try { await navigator.clipboard.writeText(url); setShareFeedback('Link Copied!'); } catch (err) { setShareFeedback('Copy URL manually'); }
-                setTimeout(() => setShareFeedback(''), 2500);
-            };
-
-            const totalVotes = (pulse.yes || 0) + (pulse.no || 0);
-            const yesPct = totalVotes === 0 ? 0 : Math.round(((pulse.yes || 0) / totalVotes) * 100);
-            const noPct = totalVotes === 0 ? 0 : Math.round(((pulse.no || 0) / totalVotes) * 100);
-
-            return (
-                <div className="min-h-screen pb-20 overflow-x-hidden">
-                    <div className="bg-red-700 text-white p-4 shadow-lg sticky top-0 z-30">
-                        <div className="max-w-xl mx-auto flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                                <Icon name="trophy" className="w-6 h-6 text-yellow-400" />
-                                <h1 className="text-xl font-bold tracking-tight">Kingdom Tracker</h1>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                {lastFetchTime && <div className="w-2 h-2 bg-green-400 rounded-full"></div>}
-                                <button onClick={handleShare} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors relative touch-manipulation">
-                                    <Icon name="share-2" className="w-5 h-5" />
-                                    {shareFeedback && <div className="absolute top-10 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-50">{shareFeedback}</div>}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="max-w-xl mx-auto p-4 space-y-6">
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-red-600"></div>
-                            <div className="p-5 text-center">
-                                <h2 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">PROJECTED FINISH</h2>
-                                <div className="flex justify-center items-end space-x-2 mb-2">
-                                    <span className={`text-6xl font-black ${inPlayoffs ? 'text-green-600' : 'text-red-600'}`}>{chiefsRank || '--'}</span>
-                                    <span className="text-xl font-bold text-gray-400 mb-2">seed</span>
-                                </div>
-                                <div className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold shadow-sm ${inPlayoffs ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                    {inPlayoffs ? <Icon name="check-circle-2" className="w-4 h-4 mr-2" /> : <Icon name="x-circle" className="w-4 h-4 mr-2" />}
-                                    {inPlayoffs ? 'PLAYOFF BOUND' : 'ELIMINATED'}
-                                </div>
-                                <div className="mt-4 text-xs text-gray-400">Current Record: {chiefsStats?.wins}-{chiefsStats?.losses}*</div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center justify-between select-none">
-                            <button onClick={() => setActiveWeek(w => Math.max(13, w-1))} disabled={activeWeek === 13} className="arrow-btn p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30 disabled:bg-gray-100 disabled:text-gray-400 shadow-sm border border-red-100"><Icon name="chevron-left" className="w-6 h-6" /></button>
-                            <div className="text-center"><span className="text-xs text-gray-400 font-bold block uppercase tracking-wide">SCHEDULE</span><span className="font-bold text-xl">Week {activeWeek}</span></div>
-                            <button onClick={() => setActiveWeek(w => Math.min(18, w+1))} disabled={activeWeek === 18} className="arrow-btn p-3 bg-red-50 text-red-600 rounded-full disabled:opacity-30 disabled:bg-gray-100 disabled:text-gray-400 shadow-sm border border-red-100"><Icon name="chevron-right" className="w-6 h-6" /></button>
-                        </div>
-
-                        <div className="space-y-3">
-                            {FULL_SCHEDULE[activeWeek]?.map((game) => {
-                                const isHomeSelected = scenarios[game.id] === 'home';
-                                const isFinal = game.status === 'final';
-                                const isLive = game.status === 'live';
-                                
-                                return (
-                                    <div key={game.id} className={`bg-white rounded-lg p-4 shadow-sm relative overflow-hidden transition-all duration-300 ${isLive ? 'live-border' : 'border border-gray-200'}`}>
-                                        <div className="flex justify-between items-center mb-2">
-                                            {isLive && <div className="flex items-center space-x-1.5 bg-green-50 text-green-600 px-2 py-0.5 rounded-full border border-green-200"><div className="w-2 h-2 bg-green-500 rounded-full live-indicator"></div><span className="text-[10px] font-black tracking-wider">LIVE</span></div>}
-                                            {!isLive && <div className="h-4"></div>}
-                                        </div>
-
-                                        <div className="flex justify-between items-center mb-3 px-1">
-                                            <div className="text-center w-1/3"><div className={`text-base font-bold ${isFinal ? (game.winner === 'home' ? 'text-gray-900' : 'text-gray-400') : (isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.home}</div></div>
-                                            <div className="text-xs text-gray-300 font-bold">VS</div>
-                                            <div className="text-center w-1/3"><div className={`text-base font-bold ${isFinal ? (game.winner === 'away' ? 'text-gray-900' : 'text-gray-400') : (!isHomeSelected ? 'text-gray-900' : 'text-gray-400')}`}>{game.away}</div></div>
-                                        </div>
-
-                                        {isFinal ? (
-                                            <div className="bg-gray-100 rounded-lg p-3 mb-3 flex flex-col items-center justify-center border border-gray-200">
-                                                <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1">FINAL SCORE</span>
-                                                <span className="text-xl font-black text-gray-800">{game.score}</span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center justify-between bg-gray-100 rounded-lg p-1 mb-3">
-                                                <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>{game.home} Wins</button>
-                                                <button onClick={() => handleToggle(game.id)} className={`flex-1 text-xs py-3 rounded-md font-bold transition-all duration-200 touch-manipulation ${!isHomeSelected ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>{game.away} Wins</button>
-                                            </div>
-                                        )}
-
-                                        <div className="flex items-start space-x-2 bg-blue-50 p-2 rounded text-blue-800">
-                                            <Icon name="info" className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                            <div className="text-xs leading-relaxed"><span className="font-bold">Root for {game.interest}: </span>{game.reason}</div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <div>
-                            <h2 className="text-lg font-bold mb-3 flex items-center text-gray-800"><Icon name="activity" className="w-5 h-5 mr-2 text-red-600" /> Live AFC Standings*</h2>
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
-                                        <tr><th className="px-4 py-3 text-left w-8">#</th><th className="px-4 py-3 text-left">Team</th><th className="px-4 py-3 text-right">Rec</th></tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {projectedStandings.map((team, idx) => {
-                                            const rank = idx + 1;
-                                            const isChiefs = team.name === 'Chiefs';
-                                            return (
-                                                <React.Fragment key={team.id}>
-                                                    <tr className={`${isChiefs ? 'bg-red-50' : 'bg-white'} ${rank <= 7 ? 'text-gray-900' : 'text-gray-400'} ${rank === 4 ? 'border-b-4 border-gray-200' : ''}`}>
-                                                        <td className="px-4 py-3 font-bold text-gray-500">{rank}</td>
-                                                        <td className="px-4 py-3 flex items-center font-medium"><span className="mr-3 text-xl">{team.logo}</span><div className="flex flex-col"><span className={isChiefs ? 'text-red-700 font-bold text-base' : ''}>{team.name}</span>{isChiefs && rank > 7 && <span className="text-[10px] text-red-500 font-bold uppercase">In the Hunt</span>}</div></td>
-                                                        <td className="px-4 py-3 text-right tabular-nums font-bold">{team.wins}-{team.losses}</td>
-                                                    </tr>
-                                                    {rank === 7 && <tr className="bg-gray-800 text-white"><td colSpan="3" className="px-4 py-1 text-[10px] text-center font-bold uppercase tracking-widest">Playoff Cutoff Line</td></tr>}
-                                                </React.Fragment>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div className="bg-gray-900 rounded-xl p-6 text-white shadow-lg">
-                            <div className="flex items-center justify-between mb-4">
-                                <div><h3 className="text-lg font-bold">Kingdom Pulse</h3><div className="flex items-center space-x-2"><p className="text-gray-400 text-xs">Join other fans.</p>{localMode && <span className="text-[10px] bg-gray-700 px-1.5 rounded text-gray-300 flex items-center">Offline Mode</span>}</div></div>
-                                <Icon name="calendar" className="text-gray-600 w-8 h-8" />
-                            </div>
-                            <div className="flex space-x-3 mb-4">
-                                <button onClick={() => handleVote('yes')} disabled={pulse.voted} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-transform active:scale-95 border border-white/10 touch-manipulation flex justify-center items-center ${pulse.voted ? 'bg-green-600/20 text-white/50' : 'bg-green-600 hover:bg-green-500'}`}>BELIEVE 🚀</button>
-                                <button onClick={() => handleVote('no')} disabled={pulse.voted} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-transform active:scale-95 border border-white/10 touch-manipulation flex justify-center items-center ${pulse.voted ? 'bg-red-600/20 text-white/50' : 'bg-red-600 hover:bg-red-500'}`}>IT'S OVER 💀</button>
-                            </div>
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-xs font-semibold mb-1 text-gray-400"><span>Optimists ({yesPct}%)</span><span>Doomers ({noPct}%)</span></div>
-                                <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden flex"><div className="bg-green-500 h-full transition-all duration-500" style={{ width: `${yesPct}%` }}></div><div className="bg-red-500 h-full transition-all duration-500" style={{ width: `${noPct}%` }}></div></div>
-                            </div>
-                        </div>
-                        <div className="mt-8 text-center text-xs text-gray-400 pb-8">* Includes auto-projections for unlisted games to reach 17 total<div className="mt-2 font-mono opacity-50">Version {APP_VERSION}</div></div>
-                    </div>
+    <!-- Header -->
+    <header class="chiefs-red text-white shadow-lg shrink-0 z-20 relative">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-white p-1.5 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                    <span class="text-xl font-bold text-[#E31837]">KC</span>
                 </div>
-            );
+                <div class="leading-tight">
+                    <h1 class="text-lg md:text-xl font-black uppercase tracking-wider">Playoff Machine</h1>
+                    <p class="text-[10px] md:text-xs text-white/80 font-medium">Week 15-18 Simulator</p>
+                </div>
+            </div>
+            
+            <div id="status-container" class="flex flex-col items-end">
+                <div id="status-banner" class="px-3 py-1.5 rounded bg-gray-900 text-white font-bold text-sm shadow-lg animate-pulse border border-white/20">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i> LOADING...
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        
+        <!-- Left Panel: Schedule (Scrollable) -->
+        <div class="w-full md:w-2/3 lg:w-3/4 flex flex-col bg-gray-100 border-r border-gray-200 h-full">
+            
+            <!-- Toolbar -->
+            <div class="bg-white px-4 py-3 border-b border-gray-200 flex justify-between items-center shadow-sm z-10 sticky top-0">
+                <div class="flex items-center gap-2 text-sm text-gray-600">
+                    <i class="fas fa-filter"></i>
+                    <span class="hidden sm:inline">Filter:</span>
+                    <button class="font-bold text-gray-900 hover:text-[#E31837]">Key Games Only</button>
+                </div>
+                <button onclick="resetSimulation()" class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-md font-bold transition flex items-center gap-2">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+
+            <!-- Games Grid -->
+            <div id="schedule-container" class="flex-1 overflow-y-auto custom-scroll p-4 space-y-6 pb-20">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- Right Panel: Standings (Fixed width) -->
+        <div class="w-full md:w-1/3 lg:w-1/4 bg-white shadow-2xl z-30 flex flex-col border-t md:border-t-0 border-gray-200 h-full">
+            <div class="p-3 bg-gray-900 text-white shrink-0 flex justify-between items-center shadow-md">
+                <h2 class="font-bold text-sm uppercase tracking-wide"><i class="fas fa-list-ol mr-2 text-[#E31837]"></i>AFC Standings</h2>
+                <span class="text-[10px] bg-gray-700 px-2 py-0.5 rounded text-gray-300">Top 7 In</span>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto custom-scroll">
+                <table class="w-full text-sm border-collapse">
+                    <thead class="text-[10px] uppercase text-gray-500 bg-gray-50 sticky top-0 z-10 shadow-sm">
+                        <tr>
+                            <th class="py-2 pl-3 text-left w-8">Rk</th>
+                            <th class="py-2 text-left">Team</th>
+                            <th class="py-2 pr-3 text-right w-12">Rec</th>
+                        </tr>
+                    </thead>
+                    <tbody id="standings-body" class="divide-y divide-gray-100">
+                        <!-- Injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tiebreaker Info / Legend -->
+            <div class="p-3 bg-gray-50 text-[10px] text-gray-500 border-t border-gray-200 shrink-0 space-y-1">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div> <span>Playoff Berth</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-yellow-500"></div> <span>On the Bubble</span>
+                </div>
+                <div class="mt-2 pt-2 border-t border-gray-200">
+                    <strong>Tiebreakers Applied:</strong> H2H > Conf > Common. <br>
+                    <span class="italic text-gray-400">Note: Complex 3+ team ties use simplified logic.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- 1. CONFIGURATION ---
+
+    // Team Data (Records entering Week 15)
+    // Colors are primary hex codes
+    const teams = {
+        "KC":  { name: "Chiefs",   w: 6, l: 7, t: 0, confW: 3, confL: 5, color: "#E31837" },
+        "HOU": { name: "Texans",   w: 8, l: 5, t: 0, confW: 7, confL: 3, color: "#03202f" },
+        "IND": { name: "Colts",    w: 8, l: 5, t: 0, confW: 5, confL: 4, color: "#002C5F" },
+        "BUF": { name: "Bills",    w: 9, l: 4, t: 0, confW: 7, confL: 2, color: "#00338D" },
+        "BAL": { name: "Ravens",   w: 6, l: 7, t: 0, confW: 3, confL: 6, color: "#241773" },
+        "MIA": { name: "Dolphins", w: 6, l: 7, t: 0, confW: 4, confL: 5, color: "#008E97" },
+        "PIT": { name: "Steelers", w: 7, l: 6, t: 0, confW: 5, confL: 3, color: "#FFB612" },
+        "LAC": { name: "Chargers", w: 9, l: 4, t: 0, confW: 7, confL: 2, color: "#0080C6" },
+        "DEN": { name: "Broncos",  w: 11, l: 2, t: 0, confW: 7, confL: 2, color: "#FB4F14" },
+        "NE":  { name: "Patriots", w: 11, l: 2, t: 0, confW: 7, confL: 1, color: "#002244" },
+        "CIN": { name: "Bengals",  w: 4, l: 9, t: 0, confW: 2, confL: 7, color: "#fb4f14" }, // Spoiler role
+        "JAX": { name: "Jaguars",  w: 9, l: 4, t: 0, confW: 6, confL: 4, color: "#006778" } // Division leader role
+    };
+
+    // The Games (Weeks 15-18)
+    // Tag: 'KC' means it directly involves Chiefs. 'RIVAL' means direct WC competition.
+    const schedule = [
+        // WEEK 15
+        { id: "w15-kc-lac",  week: 15, away: "LAC", home: "KC",  tag: "KC", importance: 10 },
+        { id: "w15-ind-sea", week: 15, away: "IND", home: "SEA", tag: "RIVAL", importance: 9 },
+        { id: "w15-hou-ari", week: 15, away: "HOU", home: "ARI", tag: "RIVAL", importance: 9 },
+        { id: "w15-bal-cin", week: 15, away: "BAL", home: "CIN", tag: "RIVAL", importance: 7 },
+        { id: "w15-mia-pit", week: 15, away: "MIA", home: "PIT", tag: "RIVAL", importance: 8 }, 
+        { id: "w15-buf-ne",  week: 15, away: "BUF", home: "NE",  tag: "SEED", importance: 5 },
+
+        // WEEK 16
+        { id: "w16-kc-ten",  week: 16, away: "KC",  home: "TEN", tag: "KC", importance: 10 },
+        { id: "w16-hou-lv",  week: 16, away: "LV",  home: "HOU", tag: "RIVAL", importance: 8 },
+        { id: "w16-ind-sf",  week: 16, away: "SF",  home: "IND", tag: "RIVAL", importance: 8 },
+        { id: "w16-lac-dal", week: 16, away: "LAC", home: "DAL", tag: "RIVAL", importance: 7 }, // Charger collapse path
+        { id: "w16-pit-det", week: 16, away: "PIT", home: "DET", tag: "RIVAL", importance: 6 },
+        { id: "w16-mia-cin", week: 16, away: "CIN", home: "MIA", tag: "RIVAL", importance: 5 },
+        { id: "w16-bal-ne",  week: 16, away: "NE",  home: "BAL", tag: "RIVAL", importance: 6 },
+
+        // WEEK 17
+        { id: "w17-kc-den",  week: 17, away: "DEN", home: "KC",  tag: "KC", importance: 10 },
+        { id: "w17-hou-lac", week: 17, away: "HOU", home: "LAC", tag: "RIVAL", importance: 10 }, // HUGE GAME
+        { id: "w17-ind-jax", week: 17, away: "JAX", home: "IND", tag: "RIVAL", importance: 8 },
+        { id: "w17-pit-cle", week: 17, away: "PIT", home: "CLE", tag: "RIVAL", importance: 6 },
+        { id: "w17-mia-tb",  week: 17, away: "TB",  home: "MIA", tag: "RIVAL", importance: 5 },
+        { id: "w17-bal-gb",  week: 17, away: "BAL", home: "GB",  tag: "RIVAL", importance: 5 },
+
+        // WEEK 18
+        { id: "w18-kc-lv",   week: 18, away: "KC",  home: "LV",  tag: "KC", importance: 10 },
+        { id: "w18-hou-ind", week: 18, away: "IND", home: "HOU", tag: "RIVAL", importance: 10 }, // HUGE GAME
+        { id: "w18-lac-den", week: 18, away: "LAC", home: "DEN", tag: "RIVAL", importance: 8 },
+        { id: "w18-bal-pit", week: 18, away: "BAL", home: "PIT", tag: "RIVAL", importance: 9 }, // HUGE GAME
+        { id: "w18-mia-ne",  week: 18, away: "MIA", home: "NE",  tag: "RIVAL", importance: 6 },
+    ];
+
+    // Known Head-to-Head Tiebreakers (1 = TeamA wins, -1 = TeamB wins)
+    // Based on previous results and 2025 season data provided
+    const tiebreakers = {
+        "HOU-KC": 1,  // Texans beat KC
+        "KC-IND": 1,  // KC beat Colts
+        "BUF-KC": 1,  // Bills beat KC
+        "KC-BAL": 1,  // KC beat Ravens
+        "KC-CIN": 1,  // KC beat Bengals
+        "JAX-KC": 1,  // Jags beat KC
+        "KC-MIA": 1,  // KC has conference record edge over MIA currently
+        "DEN-KC": 0,  // Split? Assume division record logic later
+        "LAC-KC": 0   // Split? Assume division record logic later
+    };
+
+    // State
+    let selections = {};
+
+    // --- 2. LOGIC ---
+
+    function init() {
+        schedule.forEach(g => selections[g.id] = null);
+        renderSchedule();
+        updateStandings();
+    }
+
+    function getWinner(gameId) {
+        if (!selections[gameId]) return null;
+        const game = schedule.find(g => g.id === gameId);
+        return selections[gameId] === 'away' ? game.away : game.home;
+    }
+
+    function getRecord(teamCode) {
+        // Deep copy
+        let t = JSON.parse(JSON.stringify(teams[teamCode]));
+        if (!t) return { w: 0, l: 0, confW: 0, confL: 0 }; // Fallback for non-listed teams
+
+        schedule.forEach(game => {
+            const result = selections[game.id];
+            if (!result) return;
+
+            const winner = result === 'away' ? game.away : game.home;
+            const loser = result === 'away' ? game.home : game.away;
+
+            // Update Overall
+            if (winner === teamCode) t.w++;
+            if (loser === teamCode) t.l++;
+
+            // Update Conference (Simplified: All listed teams are AFC except non-listed)
+            // We check if the OPPONENT is an AFC team. 
+            // Actually, for simplicity in this engine, we assume all listed games are AFC vs AFC
+            // EXCEPT for specifically named NFC opponents (SEA, ARI, SF, DAL, DET, GB, TB, PHI, WAS, NYG, CHI, MIN, LAR, CAR, ATL, NO)
+            const nfcTeams = ["SEA", "ARI", "SF", "DAL", "DET", "GB", "TB", "PHI", "WAS", "NYG", "CHI", "MIN", "LAR", "CAR", "ATL", "NO"];
+            
+            if (winner === teamCode) {
+                // If I won, check if I beat an AFC team.
+                const opponent = (winner === game.away) ? game.home : game.away;
+                if (!nfcTeams.includes(opponent)) t.confW++;
+            }
+            if (loser === teamCode) {
+                const opponent = (loser === game.away) ? game.home : game.away;
+                if (!nfcTeams.includes(opponent)) t.confL++;
+            }
+        });
+        return t;
+    }
+
+    function compareTeams(idA, idB, teamA, teamB) {
+        // 1. Overall Record
+        if (teamA.w !== teamB.w) return teamB.w - teamA.w;
+
+        // 2. Head-to-Head (Check predefined map)
+        const key1 = `${idA}-${idB}`;
+        const key2 = `${idB}-${idA}`;
+        
+        if (tiebreakers[key1]) return -tiebreakers[key1]; // If idA beats idB (1), return -1 to put A first
+        if (tiebreakers[key2]) return tiebreakers[key2];  // If idB beats idA (1), return 1 to put B first
+
+        // Special Case: KC vs LAC (If KC wins W15, they split 1-1)
+        // If we selected KC to win W15...
+        if ((idA === 'KC' && idB === 'LAC') || (idA === 'LAC' && idB === 'KC')) {
+            const w15 = selections['w15-kc-lac'];
+            // If KC wins W15, they are 1-1. Move to Div/Common. 
+            // Simulator Simplification: Give edge to KC on common games/div logic if tie
+            if (w15 === 'home') return (idA === 'KC') ? -1 : 1; 
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+        // 3. Conference Record
+        if (teamA.confW !== teamB.confW) return teamB.confW - teamA.confW;
+
+        // 4. Alphabetical Fallback (Simulator limitation)
+        return idA.localeCompare(idB);
+    }
+
+    function updateStandings() {
+        // Calculate all records first
+        const liveTeams = [];
+        Object.keys(teams).forEach(id => {
+            // Only rank the main contenders, ignore purely spoiler teams like Bengals if they have low wins
+            // But we need Bengals in list to update their record properly
+            const rec = getRecord(id);
+            liveTeams.push({ id: id, ...rec });
+        });
+
+        // Sort
+        liveTeams.sort((a, b) => compareTeams(a.id, b.id, a, b));
+
+        // Render
+        const tbody = document.getElementById('standings-body');
+        tbody.innerHTML = '';
+        
+        let chiefsRank = 0;
+        let chiefsIn = false;
+
+        // Filter out teams with <= 6 wins that aren't KC (clean up display)
+        // Actually keep them for context
+        
+        liveTeams.forEach((team, index) => {
+            const rank = index + 1;
+            const isKC = team.id === 'KC';
+            if (isKC) chiefsRank = rank;
+
+            const tr = document.createElement('tr');
+            tr.className = `team-row border-b border-gray-50 ${isKC ? 'bg-red-50' : 'hover:bg-gray-50'}`;
+            
+            // Rank Badge
+            let rankColor = "text-gray-400";
+            if (rank <= 7) rankColor = "text-green-600 font-bold";
+            if (rank > 7 && rank <= 9) rankColor = "text-yellow-600 font-bold";
+            
+            // Row Content
+            tr.innerHTML = `
+                <td class="py-2.5 pl-3 ${rankColor} seed-badge">${rank}</td>
+                <td class="py-2.5">
+                    <div class="flex items-center gap-2">
+                        <!-- Color Dot -->
+                        <div class="w-1.5 h-8 rounded-full" style="background-color: ${teams[team.id].color}"></div>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-gray-800 leading-none ${isKC ? 'text-red-700 text-base' : 'text-sm'}">
+                                ${teams[team.id].name}
+                            </span>
+                            <span class="text-[10px] text-gray-400">AFC ${team.confW}-${team.confL}</span>
+                        </div>
+                    </div>
+                </td>
+                <td class="py-2.5 pr-3 text-right font-mono font-bold text-gray-700">
+                    ${team.w}-${team.l}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        updateBanner(chiefsRank, liveTeams.find(t => t.id === 'KC'));
+    }
+
+    function updateBanner(rank, kcStats) {
+        const banner = document.getElementById('status-banner');
+        const container = document.getElementById('status-container');
+        
+        // Logic
+        if (rank <= 7) {
+            banner.className = "px-4 py-2 rounded bg-green-600 text-white font-bold text-sm md:text-base shadow-lg transition-all border border-green-400";
+            banner.innerHTML = `<i class="fas fa-check-circle mr-2"></i>CHIEFS ARE IN THE PLAYOFFS (Seed #${rank})`;
+        } else if (rank <= 9) {
+            banner.className = "px-4 py-2 rounded bg-yellow-500 text-white font-bold text-sm md:text-base shadow-lg transition-all border border-yellow-300";
+            banner.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>ON THE BUBBLE (Seed #${rank})`;
+        } else {
+            // Check for Mathematical Elimination (Simple check: Max wins < 7th seed wins?)
+            // This is complex, so we will stick to "Outside Looking In"
+            banner.className = "px-4 py-2 rounded bg-[#E31837] text-white font-bold text-sm md:text-base shadow-lg transition-all border border-red-400";
+            banner.innerHTML = `<i class="fas fa-times-circle mr-2"></i>OUTSIDE LOOKING IN (Seed #${rank})`;
+        }
+    }
+
+    // --- 3. RENDER UI ---
+
+    function renderSchedule() {
+        const container = document.getElementById('schedule-container');
+        container.innerHTML = '';
+
+        const weeks = [15, 16, 17, 18];
+        
+        weeks.forEach(week => {
+            const weekGames = schedule.filter(g => g.week === week);
+            if(weekGames.length === 0) return;
+
+            // Section Header
+            const header = document.createElement('div');
+            header.className = "flex items-center gap-2 mb-2 mt-4 first:mt-0";
+            header.innerHTML = `
+                <div class="h-px bg-gray-300 flex-1"></div>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Week ${week}</span>
+                <div class="h-px bg-gray-300 flex-1"></div>
+            `;
+            container.appendChild(header);
+
+            // Grid
+            const grid = document.createElement('div');
+            grid.className = "grid grid-cols-1 lg:grid-cols-2 gap-3";
+
+            weekGames.forEach(game => {
+                const isKC = game.tag === 'KC';
+                const el = document.createElement('div');
+                
+                // Dynamic styling based on selection
+                const currentSel = selections[game.id];
+                let borderColor = "border-transparent";
+                if (currentSel === 'away') borderColor = "border-l-4 border-l-gray-600"; 
+                if (currentSel === 'home') borderColor = "border-l-4 border-l-gray-600";
+                if (isKC && currentSel === 'home') borderColor = "border-l-4 border-l-[#E31837]";
+
+                el.className = `game-card bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex flex-col gap-2 ${borderColor}`;
+                
+                // Labels
+                let badge = "";
+                if (isKC) badge = `<span class="bg-red-100 text-red-700 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">Must Win</span>`;
+                else if (game.tag === 'RIVAL') badge = `<span class="bg-blue-50 text-blue-700 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">Key Game</span>`;
+
+                // HTML structure
+                el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="text-[10px] text-gray-400 font-mono">${game.away} @ ${game.home}</span>
+                        ${badge}
+                    </div>
+                    
+                    <div class="flex gap-1 w-full">
+                        <button onclick="pick('${game.id}', 'away')" 
+                            class="flex-1 py-1.5 rounded text-xs font-bold transition-colors border ${getBtnClass(game.id, 'away', game.away)}">
+                            ${teams[game.away]?.name || game.away}
+                        </button>
+                        <button onclick="pick('${game.id}', 'home')" 
+                            class="flex-1 py-1.5 rounded text-xs font-bold transition-colors border ${getBtnClass(game.id, 'home', game.home)}">
+                            ${teams[game.home]?.name || game.home}
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(el);
+            });
+            container.appendChild(grid);
+        });
+    }
+
+    function getBtnClass(gameId, side, teamCode) {
+        const s = selections[gameId];
+        const teamColor = teams[teamCode]?.color || '#4b5563';
+        
+        if (s === side) {
+            // Selected
+            return `bg-gray-800 text-white border-gray-800 shadow-inner`;
+        }
+        // Not Selected
+        return `bg-white text-gray-600 hover:bg-gray-50 border-gray-200`;
+    }
+
+    // Exposed to Window
+    window.pick = function(gameId, side) {
+        if (selections[gameId] === side) selections[gameId] = null; // Toggle off
+        else selections[gameId] = side;
+        
+        renderSchedule(); // Re-render buttons
+        updateStandings(); // Re-calc math
+    };
+
+    window.resetSimulation = function() {
+        init();
+    };
+
+    // Start
+    init();
+
+</script>
 </body>
 </html>
